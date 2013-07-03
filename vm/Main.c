@@ -1095,6 +1095,7 @@ void setController(void)
 
 		//up the tail
 		case RAISE_TAIL:
+			g_Actuator.TP_gain = 0.8;
 			g_Actuator.target_tail = 0;
 			//nxt_motor_set_speed(TAIL_MOTOR,-15,1);
 			break;
