@@ -1181,7 +1181,7 @@ void setController(void)
 		//circling
 		//@param angle to turn
 		case PIVOT_TURN:
-
+			/*
 			if( g_Controller.pivot_turn_flag == 0 )
 			{
 				g_Actuator.forward = 0;
@@ -1200,7 +1200,8 @@ void setController(void)
 				g_Controller.target_pivot_turn_angle_R = calcAngle2Encoder(state.value0);
 				g_Controller.pivot_turn_flag = 1;
 			}
-
+			*/
+			ecrobot_sound_tone(state.value0, state.value1, state.value2);
 			break;
 
 		//selecting logger
