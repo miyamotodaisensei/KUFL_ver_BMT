@@ -51,6 +51,8 @@ S8 g_pwm_L = 0;
 S8 g_pwm_R = 0;
 S8 g_pwm_T = 0;
 
+U8 rotate_counter = 0;
+
 /*--------------------------*/
 /*	センサー用				*/
 /*--------------------------*/
@@ -364,6 +366,7 @@ TASK(TaskMain)
 ===============================================================================================
 */
 #define LIGHT_BUFFER_LENGTH_MAX 250
+#define ROTATE_E 50
 
 /*==================================================*/
 /*	変数											*/
@@ -379,6 +382,8 @@ static U32 g_LightAve = 0;
 TASK(TaskSensor)
 {
 	U8 i = 0;
+	U16 pre_rotate_left;
+	U16 pre_rotate_right;
 
 	//==========================================
 	//	Data Update of Sensor
@@ -432,9 +437,38 @@ TASK(TaskSensor)
 	//--------------------------------
 	//	Motor Data
 	//--------------------------------
+	pre_rotate_left = g_Sensor.count_left;
+	pre_rotate_right = g_Sensor.count_right;
+
 	g_Sensor.count_left = nxt_motor_get_count(LEFT_MOTOR);
 	g_Sensor.count_right = nxt_motor_get_count(RIGHT_MOTOR);
 	g_Sensor.count_tail = nxt_motor_get_count(TAIL_MOTOR);
+
+	g_Sensor.rotate_left[rotate_counter] = g_Sensor.count_left;
+	g_Sensor.rotate_left[rotate_counter] -= pre_rotate_left;
+	g_Sensor.rotate_right[rotate_counter] = g_Sensor.count_right;
+	g_Sensor.rotate_right[rotate_counter] -= pre_rotate_left;
+
+	rotate_counter++;
+
+	if(rotate_counter >= ROTATE_BUFFER_LENGTH_MAX) {
+		rotate_counter = 0;
+	}
+
+	for(i=0; i<ROTATE_BUFFER_LENGTH_MAX; i++) {
+		g_Sensor.rotate_left_ave += g_Sensor.rotate_left[i] * 100;
+		g_Sensor.rotate_right_ave += g_Sensor.rotate_right[i] * 100;
+	}
+	g_Sensor.rotate_left_ave /= ROTATE_BUFFER_LENGTH_MAX;
+	g_Sensor.rotate_right_ave /= ROTATE_BUFFER_LENGTH_MAX;
+
+	if(abs(g_Sensor.rotate_left_ave - g_Sensor.rotate_right_ave) > ROTATE_E) {
+		g_Controller.curb_judge = 1;
+		//ecrobot_sound_tone(440, 50, 30);
+	}
+	else {
+		g_Controller.curb_judge = 0;
+	}
 
 	//--------------------------------
 	//	battery Data
@@ -448,6 +482,7 @@ TASK(TaskSensor)
 	//	calculation
 	//==========================================
 	//Bottle Detecting
+	/*
 	if( g_Controller.bottle_right_flag == 1 )
 	{
 		if(g_Sensor.distance < g_Controller.bottle_right_length)
@@ -463,7 +498,7 @@ TASK(TaskSensor)
 			g_Sensor.bottle_is_left = 1;
 		}
 	}
-
+	*/
 	//==========================================
 	//  Termination of Task
 	//==========================================
@@ -627,7 +662,10 @@ TASK(TaskLogger)
 			break;
 
 		case LOG_DT:
+			/*
 			ecrobot_bt_data_logger( (S8)(g_Sensor.bottle_is_right), (S8)(g_Sensor.bottle_is_left) );
+			*/
+			ecrobot_bt_data_logger( (S8)(g_Controller.curb_judge), 0 );
 			break;
 
 		case LOG_BALANCE_TAIL:
@@ -714,11 +752,17 @@ void InitNXT()
 	g_Sensor.distance = 255;
 	g_Sensor.count_left = 0;
 	g_Sensor.count_right = 0;
+	for(i=0; i<ROTATE_BUFFER_LENGTH_MAX; i++) {
+		g_Sensor.rotate_left[i] = 0;
+		g_Sensor.rotate_right[i] = 0;
+	}
+	g_Sensor.rotate_left_ave = 0;
+	g_Sensor.rotate_right_ave = 0;
 	g_Sensor.battery = 600;
-
+	/*
 	g_Sensor.bottle_is_left = 0;
 	g_Sensor.bottle_is_right = 0;
-
+	*/
 	g_Sensor.BTstart = 0;
 
 
@@ -768,11 +812,15 @@ void InitNXT()
 	g_Controller.pivot_turn_flag = 0;
 	g_Controller.start_pivot_turn_encoder_R = 0;
 	g_Controller.target_pivot_turn_angle_R = 0;
+	/*
 	g_Controller.bottle_left_flag = 0;
 	g_Controller.bottle_right_flag = 0;
 	g_Controller.bottle_left_length = 0;
 	g_Controller.bottle_right_length = 0;
 	g_Controller.bottle_judge = 0;
+	*/
+	g_Controller.curb_flag = 0;
+	g_Controller.curb_judge = 0;
 }
 
 /*
@@ -800,6 +848,7 @@ void InitNXT()
 	Return Value: no
 ===============================================================================================
 */
+
 void EventSensor(){
 
 	//--------------------------------
@@ -934,6 +983,7 @@ void EventSensor(){
 	//==========================================
 	//	drift turn
 	//==========================================
+	/*
 	if(g_Controller.bottle_judge == 1)
 	{
 		//sendevent turn left or right
@@ -954,6 +1004,22 @@ void EventSensor(){
 		}
 
 		g_Controller.bottle_judge = 0;
+	}
+	*/
+
+	if(g_Controller.curb_judge == 1) {
+		if(g_Controller.curb_flag == 0) {
+			setEvent(CURB);
+			//ecrobot_sound_tone(440, 50, 30);
+			g_Controller.curb_flag = 1;
+		}
+	}
+	else {
+		if(g_Controller.curb_flag == 1) {
+			setEvent(STRAIGHT);
+			//ecrobot_sound_tone(880, 50, 30);
+			g_Controller.curb_flag = 0;
+		}
 	}
 
 	//
@@ -1170,6 +1236,7 @@ void setController(void)
 			break;
 
 		case SERACH_BOTTLE_RIGHT:
+			/*
 			g_Actuator.forward = 0;
 
 			if( g_Controller.bottle_right_flag == 0 )
@@ -1177,9 +1244,11 @@ void setController(void)
 				g_Controller.bottle_right_length = state.value0;
 				g_Controller.bottle_right_flag = 1;
 			}
+			*/
 			break;
 
 		case SEARCH_BOTTLE_LEFT:
+			/*
 			g_Actuator.forward = 0;
 
 			if( g_Controller.bottle_left_flag == 0 )
@@ -1187,20 +1256,24 @@ void setController(void)
 				g_Controller.bottle_left_length = state.value0;
 				g_Controller.bottle_left_flag = 1;
 			}
-
+			*/
 			break;
 
 		case SEARCH_BOTTLE_END:
+			/*
 			g_Controller.bottle_right_flag = 0;
 			g_Controller.bottle_right_length = 0;
 			g_Sensor.bottle_is_right = 0;
 			g_Controller.bottle_left_flag = 0;
 			g_Controller.bottle_left_length = 0;
 			g_Sensor.bottle_is_left = 0;
+			*/
 			break;
 
 		case SEARCH_BOTTLE_JUDGE:
+			/*
 			g_Controller.bottle_judge = 1;
+			*/
 			break;
 		default:
 			break;

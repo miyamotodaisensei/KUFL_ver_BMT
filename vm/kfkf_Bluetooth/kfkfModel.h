@@ -62,8 +62,8 @@ typedef enum EvtType
 	MOTOR_COUNT = 10,
 	BT_START = 11,
 	PIVOT_TURN_END = 12,
-	BOTTLE_LEFT = 13,
-	BOTTLE_RIGHT = 14
+	STRAIGHT = 13,
+	CURB = 14
 }EvtType_e;
 
 /*
@@ -113,11 +113,15 @@ typedef struct tag_Controller
 	int start_pivot_turn_encoder_R;
 	int target_pivot_turn_angle_R;
 
+	/*
 	U8 bottle_left_flag;
 	U8 bottle_right_flag;
 	U8 bottle_left_length;
 	U8 bottle_right_length;
 	U8 bottle_judge;
+	*/
+	U8 curb_flag;
+	U8 curb_judge;
 
 }Controller_t;
 
