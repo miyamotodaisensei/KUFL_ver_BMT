@@ -366,7 +366,7 @@ TASK(TaskMain)
 ===============================================================================================
 */
 #define LIGHT_BUFFER_LENGTH_MAX 250
-#define ROTATE_E 50
+#define ROTATE_E 160
 
 /*==================================================*/
 /*	変数											*/
@@ -455,6 +455,9 @@ TASK(TaskSensor)
 		rotate_counter = 0;
 	}
 
+	g_Sensor.rotate_left_ave = 0;
+	g_Sensor.rotate_right_ave = 0;
+
 	for(i=0; i<ROTATE_BUFFER_LENGTH_MAX; i++) {
 		g_Sensor.rotate_left_ave += g_Sensor.rotate_left[i] * 100;
 		g_Sensor.rotate_right_ave += g_Sensor.rotate_right[i] * 100;
@@ -462,13 +465,13 @@ TASK(TaskSensor)
 	g_Sensor.rotate_left_ave /= ROTATE_BUFFER_LENGTH_MAX;
 	g_Sensor.rotate_right_ave /= ROTATE_BUFFER_LENGTH_MAX;
 
-	if(abs(g_Sensor.rotate_left_ave - g_Sensor.rotate_right_ave) > ROTATE_E) {
-		g_Controller.curb_judge = 1;
-		//ecrobot_sound_tone(440, 50, 30);
-	}
-	else {
-		g_Controller.curb_judge = 0;
-	}
+		if(abs(g_Sensor.rotate_left_ave - g_Sensor.rotate_right_ave) > ROTATE_E) {
+			g_Controller.curb_judge = 1;
+			//ecrobot_sound_tone(440, 50, 30);
+		}
+		else {
+			g_Controller.curb_judge = 0;
+		}
 
 	//--------------------------------
 	//	battery Data
@@ -1010,18 +1013,17 @@ void EventSensor(){
 	if(g_Controller.curb_judge == 1) {
 		if(g_Controller.curb_flag == 0) {
 			setEvent(CURB);
-			//ecrobot_sound_tone(440, 50, 30);
+			ecrobot_sound_tone(440, 50, 60);
 			g_Controller.curb_flag = 1;
 		}
 	}
 	else {
 		if(g_Controller.curb_flag == 1) {
 			setEvent(STRAIGHT);
-			//ecrobot_sound_tone(880, 50, 30);
+			ecrobot_sound_tone(1000, 50, 30);
 			g_Controller.curb_flag = 0;
 		}
 	}
-
 	//
 	setNextState();
 

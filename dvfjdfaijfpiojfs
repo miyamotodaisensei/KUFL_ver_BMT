@@ -1,0 +1,30 @@
+[33mcommit 45bcab94b2d0d81188787bb748a5ba05d99a5b5e[m
+Merge: c64b2bb a85fb0d
+Author: miyamoto yuya <temotemo1212@gmail.com>
+Date:   Fri Jul 5 18:07:14 2013 +0900
+
+    make clean
+
+[33mcommit c64b2bbba872b50317c8b00f686c2fe567fd3978[m
+Author: miyamoto yuya <temotemo1212@gmail.com>
+Date:   Fri Jul 5 17:59:45 2013 +0900
+
+    make clean
+
+[33mcommit a85fb0dc42916c41c2d55d0e1a1f6083734bbe52[m
+Author: Beppu Kaoru <beppu@f.ait.kyushu-u.ac.jp>
+Date:   Fri Jul 5 17:42:32 2013 +0900
+
+    ADD curb judge.
+
+[33mcommit b6614632e35b3cb54f458ec1057524c9486841d0[m
+Author: Beppu Kaoru <beppu@f.ait.kyushu-u.ac.jp>
+Date:   Wed Jul 3 15:29:15 2013 +0900
+
+    Set raise tail TP_gain.
+
+[33mcommit 7e2f5f10476bb54c9a279d7c83148e2d7db6fbe2[m
+Author: miyamoto yuya <temotemo1212@gmail.com>
+Date:   Tue Jul 2 15:34:51 2013 +0900
+
+    First Commit.

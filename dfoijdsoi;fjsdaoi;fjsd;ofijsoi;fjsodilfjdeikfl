@@ -1,0 +1,29 @@
+[33mcommit e62911bf654876eaca6859c4c32c6694b41bcda1[m
+Author: Beppu Kaoru <beppu@f.ait.kyushu-u.ac.jp>
+Date:   Fri Jul 5 18:18:48 2013 +0900
+
+    pivot -> sound
+
+[33mcommit 740a652dd70b1f96f4da41fb02c9d4bf932271e8[m
+Author: Beppu Kaoru <beppu@f.ait.kyushu-u.ac.jp>
+Date:   Fri Jul 5 18:09:00 2013 +0900
+
+    make clean
+
+[33mcommit a85fb0dc42916c41c2d55d0e1a1f6083734bbe52[m
+Author: Beppu Kaoru <beppu@f.ait.kyushu-u.ac.jp>
+Date:   Fri Jul 5 17:42:32 2013 +0900
+
+    ADD curb judge.
+
+[33mcommit b6614632e35b3cb54f458ec1057524c9486841d0[m
+Author: Beppu Kaoru <beppu@f.ait.kyushu-u.ac.jp>
+Date:   Wed Jul 3 15:29:15 2013 +0900
+
+    Set raise tail TP_gain.
+
+[33mcommit 7e2f5f10476bb54c9a279d7c83148e2d7db6fbe2[m
+Author: miyamoto yuya <temotemo1212@gmail.com>
+Date:   Tue Jul 2 15:34:51 2013 +0900
+
+    First Commit.
