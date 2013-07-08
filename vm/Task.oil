@@ -22,7 +22,7 @@ CPU ATMEL_AT91SAM7S256
     { 
     	APPMODE = appmode1;
     };
-    PRIORITY = 4;
+    PRIORITY = 5;
     ACTIVATION = 1;
     SCHEDULE = FULL;
     STACKSIZE = 512;
@@ -34,7 +34,7 @@ CPU ATMEL_AT91SAM7S256
     {
     	APPMODE = appmode1;
     };
-    PRIORITY = 1;
+    PRIORITY = 4;
     ACTIVATION = 1;
     SCHEDULE = FULL;
     STACKSIZE = 512;
@@ -46,7 +46,7 @@ CPU ATMEL_AT91SAM7S256
     {
     	APPMODE = appmode1;
     };
-    PRIORITY = 2;
+    PRIORITY = 3;
     ACTIVATION = 1;
     SCHEDULE = FULL;
     STACKSIZE = 512;
@@ -58,7 +58,19 @@ CPU ATMEL_AT91SAM7S256
     {
     	APPMODE = appmode1;
     };
-    PRIORITY = 3;
+    PRIORITY = 1;
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512;
+  };
+
+  TASK TaskLocalization
+  {
+    AUTOSTART = TRUE
+    {
+      APPMODE = appmode1;
+    };
+    PRIORITY = 2;
     ACTIVATION = 1;
     SCHEDULE = FULL;
     STACKSIZE = 512;
@@ -127,6 +139,21 @@ CPU ATMEL_AT91SAM7S256
     {
       ALARMTIME = 1;
       CYCLETIME = 10;
+      APPMODE = appmode1;
+    };
+  };
+
+  ALARM cyclic_alarm5
+  {
+    COUNTER = SysTimerCnt;
+    ACTION = ACTIVATETASK
+    {
+      TASK = TaskLocalization;
+    };
+    AUTOSTART = TRUE
+    {
+      ALARMTIME = 1;
+      CYCLETIME = 4;
       APPMODE = appmode1;
     };
   };

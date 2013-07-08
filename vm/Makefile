@@ -16,14 +16,14 @@ USER_LIB = nxtway_gs_balancer
 TARGET_SOURCES := \
 	Main.c \
 	balancer_param.c \
+	localization.c \
 	kfkf_Bluetooth/kfkfModel.c
-	
 
 # OSEK OIL file
 TOPPERS_OSEK_OIL_SOURCE = Task.oil
 
+BUILD_MODE = ROM_ONLY
+
 # Don't modify below part
 O_PATH ?= build
 include /cygdrive/c/cygwin/nxtOSEK/ecrobot/ecrobot.mak
-
-

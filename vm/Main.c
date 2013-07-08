@@ -7,6 +7,7 @@
 #include "NXT_Config.h"
 #include "Sensor.h"
 #include "Actuator.h"
+#include "localization.h"
 
 #include "kfkf_Bluetooth/kfkfModel.h"
 #include "kfkf_Bluetooth/Logger.h"
@@ -19,6 +20,7 @@ DeclareTask(TaskMain);
 DeclareTask(TaskSensor);
 DeclareTask(TaskActuator);
 DeclareTask(TaskLogger);
+DeclareTask(TaskLocalization);
 
 /*======================================*/
 /*	列挙型定義							*/
@@ -366,7 +368,7 @@ TASK(TaskMain)
 ===============================================================================================
 */
 #define LIGHT_BUFFER_LENGTH_MAX 250
-#define ROTATE_E 160
+#define ROTATE_E 166
 
 /*==================================================*/
 /*	変数											*/
@@ -668,7 +670,7 @@ TASK(TaskLogger)
 			/*
 			ecrobot_bt_data_logger( (S8)(g_Sensor.bottle_is_right), (S8)(g_Sensor.bottle_is_left) );
 			*/
-			ecrobot_bt_data_logger( (S8)(g_Controller.curb_judge), 0 );
+			ecrobot_bt_data_logger( (S8)(localization_x), (S8)(localization_y) );
 			break;
 
 		case LOG_BALANCE_TAIL:
@@ -697,6 +699,18 @@ TASK(TaskLogger)
 		TerminateTask();
 }
 
+/*
+###################################################################
+	Task
+	name: TaskLocalization
+	description:自己位置推定
+###################################################################
+*/
+TASK(TaskLocalization) {
+	localization((F32)g_Sensor.count_left, (F32)g_Sensor.count_right);
+
+	TerminateTask();
+}
 
 /************************************************/
 /*	Function									*/
@@ -1013,14 +1027,14 @@ void EventSensor(){
 	if(g_Controller.curb_judge == 1) {
 		if(g_Controller.curb_flag == 0) {
 			setEvent(CURB);
-			ecrobot_sound_tone(440, 50, 60);
+			//ecrobot_sound_tone(440, 50, 60);
 			g_Controller.curb_flag = 1;
 		}
 	}
 	else {
 		if(g_Controller.curb_flag == 1) {
 			setEvent(STRAIGHT);
-			ecrobot_sound_tone(1000, 50, 30);
+			//ecrobot_sound_tone(1000, 50, 30);
 			g_Controller.curb_flag = 0;
 		}
 	}
@@ -1301,5 +1315,3 @@ int calcAngle2Encoder(S16 ang)
 
 	return (int)ret;
 }
-
-
