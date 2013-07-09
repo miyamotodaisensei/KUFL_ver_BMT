@@ -1,6 +1,6 @@
 #include <math.h>
 #include <stdlib.h>
-/*sanjou*/
+
 #include "Common.h"
 
 #include "balancer.h"
