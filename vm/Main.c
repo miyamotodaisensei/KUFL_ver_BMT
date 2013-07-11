@@ -78,6 +78,13 @@ static Actuator_t g_Actuator;
 /*--------------------------*/
 static LogType_e g_LogType = LOG_NO;
 
+/*--------------------------*/
+/*	自由しっぽ走行用				*/
+/*--------------------------*/
+float free_left;
+float free_right;
+
+
 /*==================================================*/
 /*	Hook関数: ecrobot_device_initialize				*/
 /*==================================================*/
@@ -586,9 +593,51 @@ TASK(TaskActuator)
 			&g_pwm_L,
 			&g_pwm_R
 		);
+}	
+	else if( g_Actuator.StandMode == 3 )
+	{
+
+		/*balance_control(
+			(F32)g_Actuator.forward,
+			(F32)g_Actuator.turn,
+			(F32)g_Actuator.gyro_offset,
+			(F32)g_Actuator.gyro_offset,
+			0.0,
+			0.0,
+			(F32)g_Sensor.battery,
+			&g_pwm_L,
+			&g_pwm_R
+		);*/
+		g_pwm_L = (g_Actuator.forward + g_Actuator.turn)/2 ;
+		g_pwm_R = (g_Actuator.forward - g_Actuator.turn)/2 ;
+
+		/*if(abs(g_pwm_L) > 100)
+		{
+			g_pwm_R = 100 * g_pwm_R / abs(g_pwm_L);
+			g_pwm_L = 100 * g_pwm_L / abs(g_pwm_L);
+			
+
+		}
+		else if(abs(g_pwm_R) > 100)
+		{
+			g_pwm_L = 100 * g_pwm_L / abs(g_pwm_R);
+			g_pwm_R = 100 * g_pwm_R / abs(g_pwm_R);
+
+		}*/
+
+		/*if(abs(g_pwm_L) > 100)
+		{
+			g_pwm_R = 100 * g_pwm_R / abs(g_pwm_L);
+			g_pwm_L = 100;
+		}
+		else if(abs(g_pwm_R) > 100)
+		{
+			g_pwm_L = 100 * g_pwm_L / abs(g_pwm_R);
+			g_pwm_R = 100 * g_pwm_R / abs(g_pwm_R);
+
+		}*/
 
 	}
-
 
 	/*--------------------------*/
 	/*	しっぽの計算			*/
@@ -681,6 +730,10 @@ TASK(TaskLogger)
 				ecrobot_bt_data_logger( (S8)0, (S8)1 );
 			}
 			else if( g_Actuator.StandMode == 2 )
+			{
+				ecrobot_bt_data_logger( (S8)1, (S8)0 );
+			}
+			else if( g_Actuator.StandMode == 3 )
 			{
 				ecrobot_bt_data_logger( (S8)1, (S8)0 );
 			}
@@ -1127,13 +1180,25 @@ void setController(void)
 		//@param tail_run_speed :=value1
 		//@param turn :=value2
 		case TAIL_RUN_FREEDOM:
+			/*balance_init();*/
 			g_Actuator.target_tail = state.value0;
 			g_Actuator.forward = state.value1;
 			g_Actuator.turn = state.value2;
 			g_Actuator.TP_gain = (F32)state.value3 / 100;
+			
+			/*if(state.value0 == 0){
+				free_right = 0.0;
+				free_left  = 0.0;
+			}
+			else
+			{
+				free_right = g_Sensor.count_right;
+				free_left = g_Sensor.count_left;
+			}*/
+			
 
 			g_Actuator.TraceMode = 0;
-			g_Actuator.StandMode = 2;
+			g_Actuator.StandMode = 3;
 			break;
 
 		//set timer
@@ -1189,7 +1254,7 @@ void setController(void)
 		//@param speed
  		case TAIL_LINETRACE:
 			g_Actuator.TraceMode = 1;
-			g_Actuator.StandMode = 2;
+			g_Actuator.StandMode = 3;
 			g_Actuator.target_tail = state.value0;
 			//g_Actuator.tail_run_speed = state.value1;
 			g_Actuator.forward = state.value1;
