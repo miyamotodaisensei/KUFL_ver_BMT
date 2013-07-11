@@ -21,17 +21,18 @@ extern void localization(F32 left_moter, F32 right_moter) {
 	delta_theta = (delta_L_R - delta_L_L) / (2 * WHEEL_D);
 	//delta_theta = (delta_L_R) / (2 * WHEEL_D);
 	rho = delta_L / delta_theta;
+	//rho = (phi_R + phi_L) * WHEEL_D / (phi_R - phi_L);
 
 	if(delta_theta < 0.0001) {
 		localization_x = localization_x + delta_L * cos(localization_theta + delta_theta);
 		localization_y = localization_y + delta_L * sin(localization_theta + delta_theta);
-		line = 0;
+		//line = 0;
 	}
 	else {
 		delta_L = 2 * rho * sin(delta_theta / 2);
 		localization_x = localization_x + delta_L * cos(localization_theta + delta_theta / 2);
 		localization_y = localization_y + delta_L * sin(localization_theta + delta_theta / 2);
-		line = 1;
+		//line = 1;
 	}
 	localization_theta = localization_theta + delta_theta;
 	/*
@@ -61,4 +62,12 @@ extern void localization(F32 left_moter, F32 right_moter) {
 	display_int((int)delta_theta, 0);
 	*/
 	return;
+}
+
+extern void init_localization() {
+	pre_phi_R = 0.0;
+	pre_phi_L = 0.0;
+	localization_x = 0.0;
+	localization_y = 0.0;
+	localization_theta = 0.0;
 }

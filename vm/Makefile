@@ -17,6 +17,7 @@ TARGET_SOURCES := \
 	Main.c \
 	balancer_param.c \
 	localization.c \
+	opos.c \
 	kfkf_Bluetooth/kfkfModel.c
 
 # OSEK OIL file

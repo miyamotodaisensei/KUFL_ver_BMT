@@ -8,6 +8,7 @@
 #include "Sensor.h"
 #include "Actuator.h"
 #include "localization.h"
+#include "opos.h"
 
 #include "kfkf_Bluetooth/kfkfModel.h"
 #include "kfkf_Bluetooth/Logger.h"
@@ -762,6 +763,12 @@ void InitNXT()
 	nxt_motor_set_count( TAIL_MOTOR, 0);
 
 	//==========================================
+	//	Localization & OPOS
+	//==========================================
+	init_localization();
+	init_opos();
+
+	//==========================================
 	//	Sensor variables
 	//==========================================
 	g_Sensor.light = 600;
@@ -1157,12 +1164,25 @@ void setController(void)
 			g_Controller.opos_target_x = (F32)state.value1;
 			g_Controller.opos_target_y = (F32)state.value2;
 			g_Controller.opos_speed = state.value3;
-			if(g_Controller.opos_mode == 1){/*一度ととまって旋回してから移動*/
+
+			opos(g_Controller.opos_target_x, g_Controller.opos_target_y, g_Controller.opos_mode);
+			if(g_Controller.opos_mode == 0) {		// 一度ととまって旋回してから移動(x,yはマップ上)
 
 			}
-			else{/*そのまま移動*/
+			else if(g_Controller.opos_mode == 1) {	// そのまま移動(x,yはマップ上)
+				g_Actuator.forward = g_Controller.opos_speed;
+				g_Actuator.turn = opos_turn;
+			}
+			else if(g_Controller.opos_mode == 2) {	// 一度ととまって旋回してから移動(x,yはその場から)
 
 			}
+			else if(g_Controller.opos_mode == 3) {	// そのまま移動(x,yはその場から)
+				g_Actuator.forward = g_Controller.opos_speed;
+				g_Actuator.turn = opos_turn;
+			}
+
+			g_Actuator.TraceMode = 0;
+			g_Actuator.StandMode = 1;				// しっぽ走行時のアクション作ったほうがいい
 			break;
 
 
