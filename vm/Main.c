@@ -843,6 +843,7 @@ void InitNXT()
 	g_Controller.opos_target_y = 0;
 	g_Controller.opos_mode = 0;
 	g_Controller.opos_speed = 0;
+	g_Controller.opos_flag = 0;
 	/*ここまで*/
 	/*
 	g_Controller.bottle_left_flag = 0;
@@ -953,6 +954,7 @@ void EventSensor(){
 	if(g_Controller.opos_target_x - 10 < localization_x &&  localization_x < g_Controller.opos_target_x +10
 		&& g_Controller.opos_target_y - 10 < localization_y && localization_y < g_Controller.opos_target_y + 10){
 		setEvent(OPOS_END);
+		g_Controller.opos_flag = 0;
 	}
 
 	//--------------------------------
@@ -1164,10 +1166,24 @@ void setController(void)
 			g_Controller.opos_target_x = (F32)state.value1;
 			g_Controller.opos_target_y = (F32)state.value2;
 			g_Controller.opos_speed = state.value3;
-
+			if(g_Controller.opos_flag == 0){
+				g_Controller.opos_flag = 1;
+			}
 			opos(g_Controller.opos_target_x, g_Controller.opos_target_y, g_Controller.opos_mode);
 			if(g_Controller.opos_mode == 0) {		// 一度ととまって旋回してから移動(x,yはマップ上)
-
+				if(g_Controller.opos_flag == 1){
+					g_Actuator.forward = 0;
+					g_Actuator.turn = 0;
+					if(abs(g_Sensor.rotate_right_ave) < 5 && abs(g_Sensor.rotate_right_ave < 5)){
+						g_Controller.opos_flag = 2;
+					}
+				}
+				if(g_Controller.opos_flag == 2){
+					g_Actuator.turn = opos_turn;
+				}
+				if(abs(opos_turn) < 1 && g_Controller.opos_flag == 2){
+					g_Actuator.forward = g_Controller.opos_speed;
+				}
 			}
 			else if(g_Controller.opos_mode == 1) {	// そのまま移動(x,yはマップ上)
 				g_Actuator.forward = g_Controller.opos_speed;
@@ -1394,6 +1410,6 @@ void my_ecrobot_bt_data_logger(S8 data1, S8 data2)
 	*((S16 *)(&data_log_buffer[24])) = (S16)localization_y;
 	*((S16 *)(&data_log_buffer[26])) = (S16)localization_theta;
 	*((S32 *)(&data_log_buffer[28])) = (S32)ecrobot_get_sonar_sensor(SONAR_SENSOR);
-	
+
 	ecrobot_send_bt_packet(data_log_buffer, 32);
 }

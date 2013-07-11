@@ -125,6 +125,7 @@ typedef struct tag_Controller
 	F32 opos_target_y;
 	U16 opos_mode;
 	U16 opos_speed;
+	U16 opos_flag;
 	/*ここまで*/
 
 	/*
