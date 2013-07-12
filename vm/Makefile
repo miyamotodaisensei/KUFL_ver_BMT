@@ -23,6 +23,7 @@ TARGET_SOURCES := \
 # OSEK OIL file
 TOPPERS_OSEK_OIL_SOURCE = Task.oil
 
+# ビルドモードの設定
 BUILD_MODE = ROM_ONLY
 
 # Don't modify below part
