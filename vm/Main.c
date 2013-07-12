@@ -78,12 +78,6 @@ static Actuator_t g_Actuator;
 /*--------------------------*/
 static LogType_e g_LogType = LOG_NO;
 
-/*--------------------------*/
-/*	自由しっぽ走行用				*/
-/*--------------------------*/
-float free_left;
-float free_right;
-
 
 /*==================================================*/
 /*	Hook関数: ecrobot_device_initialize				*/
