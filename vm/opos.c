@@ -32,6 +32,13 @@ extern void opos(F32 x, F32 y, U16 mode) {
 	opos_theta = opos_theta * 180 / PI;
 	opos_theta = (S32)opos_theta % 360;
 
+	if(opos_theta > 90 && opos_theta < 360 && target_theta < 0){
+		target_theta += 360;
+	}
+	else if(opos_theta < -90 && opos_theta > -360 && target_theta > 0){
+		target_theta = 360 - target_theta;
+	}
+
 	opos_dif = target_theta - opos_theta;
 	//opos_differential = opos_dif - opos_pre_dif;
 	//opos_integral += (opos_dif + opos_pre_dif) / 2.0 * 0.004;
@@ -39,7 +46,7 @@ extern void opos(F32 x, F32 y, U16 mode) {
 	opos_turn = opos_P_gain * opos_dif;
 
 	//opos_pre_dif = opos_dif;
-	
+
 	if(opos_turn > 100) {
 		opos_turn = 100;
 	}
