@@ -29,6 +29,9 @@ typedef enum ActType
 	BALANCE_LINETRACE = 2,
 	CHANGE_GRAY = 4,
 	TAIL_RUN_FREEDOM = 5,
+	/*追加機能*/
+	OPOS = 6,
+
 	TIMER_SET = 8,
 	MOTOR_SET = 9,
 	PID_SET = 10,
@@ -57,6 +60,10 @@ typedef enum EvtType
 	BLACK = 3,
 	GRAY_MARKER = 4,
 	STEP = 5,
+
+	/*追加機能*/
+	OPOS_END = 6,
+
 	SONAR = 8,
 	TIMER = 9,
 	MOTOR_COUNT = 10,
@@ -112,6 +119,14 @@ typedef struct tag_Controller
 	U8 pivot_turn_flag;
 	int start_pivot_turn_encoder_R;
 	int target_pivot_turn_angle_R;
+
+	/*追加機能　opos用変数　ここから*/
+	F32 opos_target_x;
+	F32 opos_target_y;
+	U16 opos_mode;
+	U16 opos_speed;
+	U16 opos_flag;
+	/*ここまで*/
 
 	/*
 	U8 bottle_left_flag;

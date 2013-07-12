@@ -8,6 +8,8 @@
 #include "Sensor.h"
 #include "Actuator.h"
 #include "localization.h"
+#include "opos.h"
+#include "course.h"
 
 #include "kfkf_Bluetooth/kfkfModel.h"
 #include "kfkf_Bluetooth/Logger.h"
@@ -809,6 +811,12 @@ void InitNXT()
 	nxt_motor_set_count( TAIL_MOTOR, 0);
 
 	//==========================================
+	//	Localization & OPOS
+	//==========================================
+	init_localization();
+	init_opos();
+
+	//==========================================
 	//	Sensor variables
 	//==========================================
 	g_Sensor.light = 600;
@@ -878,6 +886,13 @@ void InitNXT()
 	g_Controller.pivot_turn_flag = 0;
 	g_Controller.start_pivot_turn_encoder_R = 0;
 	g_Controller.target_pivot_turn_angle_R = 0;
+	/*追加機能　OPOS　目的地用変数*/
+	g_Controller.opos_target_x = 0;
+	g_Controller.opos_target_y = 0;
+	g_Controller.opos_mode = 0;
+	g_Controller.opos_speed = 0;
+	g_Controller.opos_flag = 0;
+	/*ここまで*/
 	/*
 	g_Controller.bottle_left_flag = 0;
 	g_Controller.bottle_right_flag = 0;
@@ -902,6 +917,7 @@ void InitNXT()
 		04	gray marker
 		05	step
 		06	seesaw tilts
+		->06  opos end
 		07	dropped from the seesaw
 		08	sonar sensor
 		09	set time is up
@@ -978,6 +994,15 @@ void EventSensor(){
 	if( abs((int)(g_Sensor.gyro - g_Actuator.gyro_offset)) > g_Actuator.step_offset	)
 	{
 		setEvent(STEP);
+	}
+
+	//--------------------------------
+	//  Event:OPOS end
+	//--------------------------------
+	if(g_Controller.opos_target_x - 10 < localization_x &&  localization_x < g_Controller.opos_target_x +10
+		&& g_Controller.opos_target_y - 10 < localization_y && localization_y < g_Controller.opos_target_y + 10){
+		setEvent(OPOS_END);
+		g_Controller.opos_flag = 0;
 	}
 
 	//--------------------------------
@@ -1106,6 +1131,7 @@ void EventSensor(){
 		04	change the gray threshold
 		05	run with tail (do NOT linetrace)
 		06	down the tail at speed 15
+		-> OPOS
 		07	NOT USED (currently same as action 3)
 		08	set timer
 		09	set motor encoder count
@@ -1144,7 +1170,6 @@ void setController(void)
 		case BALANCE_STOP://stop
 			g_Actuator.forward = 0;
 			g_Actuator.turn = 0;
-
 			g_Actuator.TraceMode = 1;
 			g_Actuator.StandMode = 1;
 
@@ -1194,6 +1219,46 @@ void setController(void)
 			g_Actuator.TraceMode = 0;
 			g_Actuator.StandMode = 3;
 			break;
+
+		//opos
+		case OPOS:
+			g_Controller.opos_mode = state.value0;
+			g_Controller.opos_target_x = (F32)state.value1;
+			g_Controller.opos_target_y = (F32)state.value2;
+			g_Controller.opos_speed = state.value3;
+			opos(g_Controller.opos_target_x, g_Controller.opos_target_y, g_Controller.opos_mode);
+			if(g_Controller.opos_mode == 0) {		// 一度ととまって旋回してから移動(x,yはマップ上)
+				if(g_Controller.opos_flag == 0){
+					g_Actuator.forward = 0;
+					g_Actuator.turn = 0;
+					if(abs(g_Sensor.rotate_right_ave) < 2 && abs(g_Sensor.rotate_right_ave < 2)){
+						g_Controller.opos_flag = 1;
+					}
+				}
+				if(g_Controller.opos_flag == 1){
+					g_Actuator.turn = opos_turn;
+				}
+				if(abs(opos_turn) < 1 && g_Controller.opos_flag == 1){
+					g_Actuator.forward = g_Controller.opos_speed;
+				}
+			}
+			else if(g_Controller.opos_mode == 1) {	// そのまま移動(x,yはマップ上)
+				g_Actuator.forward = g_Controller.opos_speed;
+				g_Actuator.turn = opos_turn;
+			}
+			else if(g_Controller.opos_mode == 2) {	// 一度ととまって旋回してから移動(x,yはその場から)
+
+			}
+			else if(g_Controller.opos_mode == 3) {	// そのまま移動(x,yはその場から)
+				g_Actuator.forward = g_Controller.opos_speed;
+				g_Actuator.turn = opos_turn;
+			}
+
+			g_Actuator.TraceMode = 0;
+			g_Actuator.StandMode = 1;				// しっぽ走行時のアクション作ったほうがいい
+			break;
+
+
 
 		//set timer
 		//@param limit_timer:=value0 i.e. 20 = 2.0sec
@@ -1402,6 +1467,6 @@ void my_ecrobot_bt_data_logger(S8 data1, S8 data2)
 	*((S16 *)(&data_log_buffer[24])) = (S16)localization_y;
 	*((S16 *)(&data_log_buffer[26])) = (S16)localization_theta;
 	*((S32 *)(&data_log_buffer[28])) = (S32)ecrobot_get_sonar_sensor(SONAR_SENSOR);
-	
+
 	ecrobot_send_bt_packet(data_log_buffer, 32);
 }
