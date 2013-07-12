@@ -9,6 +9,7 @@
 #include "Actuator.h"
 #include "localization.h"
 #include "opos.h"
+#include "course.h"
 
 #include "kfkf_Bluetooth/kfkfModel.h"
 #include "kfkf_Bluetooth/Logger.h"
