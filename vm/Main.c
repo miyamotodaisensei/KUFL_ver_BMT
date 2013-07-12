@@ -1166,22 +1166,19 @@ void setController(void)
 			g_Controller.opos_target_x = (F32)state.value1;
 			g_Controller.opos_target_y = (F32)state.value2;
 			g_Controller.opos_speed = state.value3;
-			if(g_Controller.opos_flag == 0){
-				g_Controller.opos_flag = 1;
-			}
 			opos(g_Controller.opos_target_x, g_Controller.opos_target_y, g_Controller.opos_mode);
 			if(g_Controller.opos_mode == 0) {		// 一度ととまって旋回してから移動(x,yはマップ上)
-				if(g_Controller.opos_flag == 1){
+				if(g_Controller.opos_flag == 0){
 					g_Actuator.forward = 0;
 					g_Actuator.turn = 0;
-					if(abs(g_Sensor.rotate_right_ave) < 5 && abs(g_Sensor.rotate_right_ave < 5)){
-						g_Controller.opos_flag = 2;
+					if(abs(g_Sensor.rotate_right_ave) < 2 && abs(g_Sensor.rotate_right_ave < 2)){
+						g_Controller.opos_flag = 1;
 					}
 				}
-				if(g_Controller.opos_flag == 2){
+				if(g_Controller.opos_flag == 1){
 					g_Actuator.turn = opos_turn;
 				}
-				if(abs(opos_turn) < 1 && g_Controller.opos_flag == 2){
+				if(abs(opos_turn) < 1 && g_Controller.opos_flag == 1){
 					g_Actuator.forward = g_Controller.opos_speed;
 				}
 			}
