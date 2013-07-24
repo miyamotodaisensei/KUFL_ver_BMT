@@ -1272,11 +1272,11 @@ void setController(void)
 		//OPOS_SET
 			case OPOS_SET:
 			/*opox_mode には locarization_xを入力（０以外）*/
-			g_Controller.opos_mode = state.value0;
-			g_Controller.opos_target_x = g_Controller.opos_target_x+(F32)state.value1;
-			g_Controller.opos_target_y = g_Controller.opos_target_y+(F32)state.value2;
+			g_Controller.opos_mode = (F32)state.value0;
+			g_Controller.opos_target_x = (F32)state.value1;
+			g_Controller.opos_target_y = (F32)state.value2;
 			/*opos_speed には　locarization_yを入力（０以外）*/
-			g_Controller.opos_speed = state.value3;
+			g_Controller.opos_speed = (F32)state.value3;
 			/*コメント部および以下if分はテスト用の仕様　本番前には削除のこと*/
 			if(g_Controller.opos_mode!=0){
 			correct_localization(g_Controller.opos_mode,g_Controller.opos_speed,0,1);
