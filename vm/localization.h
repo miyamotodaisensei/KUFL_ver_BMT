@@ -13,14 +13,10 @@
 #define WHEEL_R 40.0			// 車輪の半径
 #define WHEEL_D 81.0			// ライトセンサ(中心)から車輪までの距離
 #define PI 3.1415926535			// π
-<<<<<<< HEAD
 #define IN_START_X 350.0
 #define IN_START_Y 496.0
 #define OUT_START_X 0.0
 #define OUT_START_Y	0.0
-=======
->>>>>>> c3ff83e59237bc9c1ec50b0d96c01ba8335f6f5d
-
 /* グローバル変数 */
 F32 pre_phi_R = 0.0;			// 内部用変数
 F32 pre_phi_L = 0.0;			// 内部用変数
