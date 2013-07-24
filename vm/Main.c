@@ -888,10 +888,7 @@ void InitNXT()
 	g_Controller.start_pivot_turn_encoder_R = 0;
 	g_Controller.target_pivot_turn_angle_R = 0;
 	/*追加機能　OPOS　目的地用変数*/
-<<<<<<< HEAD
 	g_Controller.opos_end_flag = 0;
-=======
->>>>>>> c3ff83e59237bc9c1ec50b0d96c01ba8335f6f5d
 	g_Controller.opos_target_x = 0;
 	g_Controller.opos_target_y = 0;
 	g_Controller.opos_mode = 0;
@@ -1006,7 +1003,6 @@ void EventSensor(){
 	//--------------------------------
 	//  Event:OPOS end
 	//--------------------------------
-<<<<<<< HEAD
 	if(g_Controller.opos_end_flag==1){
 	if(g_Controller.opos_target_x - 50 < localization_x &&  localization_x < g_Controller.opos_target_x +50
 		&& g_Controller.opos_target_y - 50 < localization_y && localization_y < g_Controller.opos_target_y + 50){
@@ -1015,13 +1011,7 @@ void EventSensor(){
 		g_Controller.opos_flag = 0;
 		g_Controller.opos_end_flag = 0;
 	}
-=======
-	if(g_Controller.opos_target_x - 10 < localization_x &&  localization_x < g_Controller.opos_target_x +10
-		&& g_Controller.opos_target_y - 10 < localization_y && localization_y < g_Controller.opos_target_y + 10){
-		setEvent(OPOS_END);
-		g_Controller.opos_flag = 0;
->>>>>>> c3ff83e59237bc9c1ec50b0d96c01ba8335f6f5d
-	}
+}
 
 	//--------------------------------
 	//	Event:sonar
@@ -1276,7 +1266,6 @@ void setController(void)
 
 			g_Actuator.TraceMode = 0;
 			g_Actuator.StandMode = 1;				// しっぽ走行時のアクション作ったほうがいい
-<<<<<<< HEAD
 			g_Controller.opos_end_flag = 1;
 			break;
 
@@ -1294,13 +1283,6 @@ void setController(void)
 		}
 			g_Controller.opos_end_flag = 1;
 			break;
-
-
-=======
-			break;
-
->>>>>>> c3ff83e59237bc9c1ec50b0d96c01ba8335f6f5d
-
 
 		//set timer
 		//@param limit_timer:=value0 i.e. 20 = 2.0sec
@@ -1508,11 +1490,6 @@ void my_ecrobot_bt_data_logger(S8 data1, S8 data2)
 	*((S16 *)(&data_log_buffer[22])) = (S16)localization_x;
 	*((S16 *)(&data_log_buffer[24])) = (S16)localization_y;
 	*((S16 *)(&data_log_buffer[26])) = (S16)localization_theta;
-<<<<<<< HEAD
 	//*((S32 *)(&data_log_buffer[28])) = (S32)ecrobot_get_sonar_sensor(SONAR_SENSOR);
-=======
-	*((S32 *)(&data_log_buffer[28])) = (S32)ecrobot_get_sonar_sensor(SONAR_SENSOR);
->>>>>>> c3ff83e59237bc9c1ec50b0d96c01ba8335f6f5d
-
 	ecrobot_send_bt_packet(data_log_buffer, 32);
 }
