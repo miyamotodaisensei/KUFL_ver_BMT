@@ -6,7 +6,6 @@
 	update: 2013.06.22
 ####################################################################################################
 */
-
 #ifndef _KFKFMODEL_H_
 #define _KFKFMODEL_H_
 
@@ -31,6 +30,7 @@ typedef enum ActType
 	TAIL_RUN_FREEDOM = 5,
 	/*追加機能*/
 	OPOS = 6,
+	OPOS_SET = 7,
 
 	TIMER_SET = 8,
 	MOTOR_SET = 9,
@@ -121,10 +121,12 @@ typedef struct tag_Controller
 	int target_pivot_turn_angle_R;
 
 	/*追加機能　opos用変数　ここから*/
+	U8 opos_end_flag;
 	F32 opos_target_x;
 	F32 opos_target_y;
 	U16 opos_mode;
 	U16 opos_speed;
+	U16 opos_flag;
 	/*ここまで*/
 
 	/*

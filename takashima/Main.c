@@ -207,12 +207,12 @@ TASK(TaskMain)
 		        display_goto_xy(1, 1);
 		        display_string("BT:TRUE");
 		        display_goto_xy(1, 2);
-		        display_string("CLBWhite:FALSE");
+		        display_string("CLBGray:FALSE");
 		        display_update();
 		        ecrobot_sound_tone(880, 50, 30);
 
-		        /* 状態遷移: WHITECALIB */
-				g_MTState = WHITECALIB;
+		        /* 状態遷移: TARGETCALIB */
+				g_MTState = TARGETCALIB;
 			}
 
 			break;
@@ -250,18 +250,16 @@ TASK(TaskMain)
 		        display_goto_xy(1, 1);
 		        display_string("BT:TRUE");
 		        display_goto_xy(1, 2);
-		        display_string("CLBWhite:TRUE");
+		        display_string("CLBGray:TRUE");
+		        display_goto_xy(1, 2);
+		        display_string("CLBGray:TRUE");
 		        display_goto_xy(1, 3);
-		        display_string("CLBBlack:TRUE");
-		        display_goto_xy(1,4);
-		        display_string("CLBGrat:TRUE");
-		        display_goto_xy(0, 5);
-		        display_string("kfkfModel:ON");
+		        display_string("CLBWhite:FALSE");
 		        display_update();
 		        ecrobot_sound_tone(880, 50, 30);
 
-		        /* 状態遷移: ACTION */
-				g_MTState = ACTION;
+		        /* 状態遷移: WHITECALIB */
+				g_MTState = WHITECALIB;
 			}
 			break;
 
@@ -294,8 +292,12 @@ TASK(TaskMain)
 		        display_goto_xy(1, 1);
 		        display_string("BT:TRUE");
 		        display_goto_xy(1, 2);
-		        display_string("CLBWhite:TRUE");
+		        display_string("CLBGray:TRUE");
+		        display_goto_xy(1, 2);
+		        display_string("CLBGray:TRUE");
 		        display_goto_xy(1, 3);
+		        display_string("CLBWhite:TRUE");
+		        display_goto_xy(1, 4);
 		        display_string("CLBBlack:FALSE");
 		        display_update();
 		        ecrobot_sound_tone(880, 50, 30);
@@ -334,16 +336,20 @@ TASK(TaskMain)
 		        display_goto_xy(1, 1);
 		        display_string("BT:TRUE");
 		        display_goto_xy(1, 2);
-		        display_string("CLBWhite:TRUE");
+		        display_string("CLBGray:TRUE");
+		        display_goto_xy(1, 2);
+		        display_string("CLBGray:TRUE");
 		        display_goto_xy(1, 3);
-		        display_string("CLBBlack:TRUE");
+		        display_string("CLBWhite:TRUE");
 		        display_goto_xy(1, 4);
-		        display_string("CLBGray:FALSE");
+		        display_string("CLBBlack:TRUE");
+		        display_goto_xy(0, 5);
+		        display_string("kfkfModel:ON");
 		        display_update();
 		        ecrobot_sound_tone(880, 50, 30);
 
-		        /* 状態遷移: TARGETCALIB */
-				g_MTState = TARGETCALIB;
+		        /* 状態遷移: ACTION */
+				g_MTState = ACTION;
 			}
 			break;
 
@@ -870,7 +876,6 @@ void InitNXT()
 
 	//g_Actuator.prev_light_value = g_Actuator.color_threshold;
 
-
 	//==========================================
 	//	Event Status variables
 	//==========================================
@@ -888,7 +893,6 @@ void InitNXT()
 	g_Controller.start_pivot_turn_encoder_R = 0;
 	g_Controller.target_pivot_turn_angle_R = 0;
 	/*追加機能　OPOS　目的地用変数*/
-	g_Controller.opos_end_flag = 0;
 	g_Controller.opos_target_x = 0;
 	g_Controller.opos_target_y = 0;
 	g_Controller.opos_mode = 0;
@@ -927,9 +931,7 @@ void InitNXT()
 		11 receive the bluetooth start signal
 		12 finish circling
 		13 (some event1)
-		->STRAIGHT
 		14 (some event2)
-		->CURB
  	Parameter: no
 	Return Value: no
 ===============================================================================================
@@ -1003,14 +1005,10 @@ void EventSensor(){
 	//--------------------------------
 	//  Event:OPOS end
 	//--------------------------------
-	if(g_Controller.opos_end_flag==1){
-	if(g_Controller.opos_target_x - 50 < localization_x &&  localization_x < g_Controller.opos_target_x +50
-		&& g_Controller.opos_target_y - 50 < localization_y && localization_y < g_Controller.opos_target_y + 50){
-		//ecrobot_sound_tone(600, 50, 30);
+	if(g_Controller.opos_target_x - 10 < localization_x &&  localization_x < g_Controller.opos_target_x +10
+		&& g_Controller.opos_target_y - 10 < localization_y && localization_y < g_Controller.opos_target_y + 10){
 		setEvent(OPOS_END);
 		g_Controller.opos_flag = 0;
-		g_Controller.opos_end_flag = 0;
-	}
 	}
 
 	//--------------------------------
@@ -1141,7 +1139,6 @@ void EventSensor(){
 		06	down the tail at speed 15
 		-> OPOS
 		07	NOT USED (currently same as action 3)
-		-> OPOS_SET
 		08	set timer
 		09	set motor encoder count
 		10 set pid values
@@ -1150,7 +1147,6 @@ void EventSensor(){
 		13 up the tail at speed -15
 		14 run with the tail at the linetrace
 		15 circling
-		->sound
 		16 select the logger type
 		17 set the gray marker offset
 		18 run at the balanced (do NOT linetrace)
@@ -1266,24 +1262,7 @@ void setController(void)
 
 			g_Actuator.TraceMode = 0;
 			g_Actuator.StandMode = 1;				// しっぽ走行時のアクション作ったほうがいい
-			g_Controller.opos_end_flag = 1;
 			break;
-
-		//OPOS_SET
-			case OPOS_SET:
-			/*opox_mode には locarization_xを入力（０以外）*/
-			g_Controller.opos_mode = state.value0;
-			g_Controller.opos_target_x = g_Controller.opos_target_x+(F32)state.value1;
-			g_Controller.opos_target_y = g_Controller.opos_target_y+(F32)state.value2;
-			/*opos_speed には　locarization_yを入力（０以外）*/
-			g_Controller.opos_speed = state.value3;
-			/*コメント部および以下if分はテスト用の仕様　本番前には削除のこと*/
-			if(g_Controller.opos_mode!=0){
-			correct_localization(g_Controller.opos_mode,g_Controller.opos_speed,0,1);
-		}
-			g_Controller.opos_end_flag = 1;
-			break;
-
 
 
 
@@ -1488,12 +1467,12 @@ void my_ecrobot_bt_data_logger(S8 data1, S8 data2)
 	*((S32 *)(&data_log_buffer[16])) = (S32)nxt_motor_get_count(LEFT_MOTOR);
 	*((S16 *)(&data_log_buffer[20])) = (S16)ecrobot_get_gyro_sensor(GYRO_SENSOR);
 	//*((S16 *)(&data_log_buffer[22])) = (S16)ecrobot_get_sonar_sensor(SONAR_SENSOR);
-	*((S16 *)(&data_log_buffer[28])) = (S16)ecrobot_get_light_sensor(LIGHT_SENSOR);
+	//*((S16 *)(&data_log_buffer[24])) = (S16)ecrobot_get_light_sensor(LIGHT_SENSOR);
 	//*((S16 *)(&data_log_buffer[26])) = (S16)ecrobot_get_touch_sensor(TOUCH_SENSOR);
 	*((S16 *)(&data_log_buffer[22])) = (S16)localization_x;
 	*((S16 *)(&data_log_buffer[24])) = (S16)localization_y;
 	*((S16 *)(&data_log_buffer[26])) = (S16)localization_theta;
-	//*((S32 *)(&data_log_buffer[28])) = (S32)ecrobot_get_sonar_sensor(SONAR_SENSOR);
+	*((S32 *)(&data_log_buffer[28])) = (S32)ecrobot_get_sonar_sensor(SONAR_SENSOR);
 
 	ecrobot_send_bt_packet(data_log_buffer, 32);
 }

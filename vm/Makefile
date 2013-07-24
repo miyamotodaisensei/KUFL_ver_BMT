@@ -17,11 +17,13 @@ TARGET_SOURCES := \
 	Main.c \
 	balancer_param.c \
 	localization.c \
+	opos.c \
 	kfkf_Bluetooth/kfkfModel.c
 
 # OSEK OIL file
 TOPPERS_OSEK_OIL_SOURCE = Task.oil
 
+# ビルドモードの設定
 BUILD_MODE = ROM_ONLY
 
 # Don't modify below part
