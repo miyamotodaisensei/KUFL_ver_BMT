@@ -30,11 +30,7 @@ typedef enum ActType
 	TAIL_RUN_FREEDOM = 5,
 	/*追加機能*/
 	OPOS = 6,
-<<<<<<< HEAD
 	OPOS_SET = 7,
-=======
->>>>>>> c3ff83e59237bc9c1ec50b0d96c01ba8335f6f5d
-
 	TIMER_SET = 8,
 	MOTOR_SET = 9,
 	PID_SET = 10,
@@ -124,10 +120,7 @@ typedef struct tag_Controller
 	int target_pivot_turn_angle_R;
 
 	/*追加機能　opos用変数　ここから*/
-<<<<<<< HEAD
 	U8 opos_end_flag;
-=======
->>>>>>> c3ff83e59237bc9c1ec50b0d96c01ba8335f6f5d
 	F32 opos_target_x;
 	F32 opos_target_y;
 	U16 opos_mode;
