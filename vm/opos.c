@@ -1,17 +1,15 @@
-
 #include "opos.h"
 #include <math.h>
 
 /******************************************************************************	*/
 //	name:			opos
-//	Description:	目的値指定型推進機構
+//	Description:	目的値指定型推進機構(OPOS)
 //	Details:		x:移動したいx / y:移動したいy
-//					mode:0or1ならばマップ上の座標(x,y)へ移動、2or3ならばその場を原点とした(x,y)へ移動
 //	Attention:		modeの2or3は現状正しく動かないため修正の必要あり
 //	Auther:			Kaoru　Beppu & Yuya Miyamoto
 //	update:			2013.07.12
 /******************************************************************************	*/
-extern void opos(F32 x, F32 y, U16 mode) {
+extern void opos(F32 x, F32 y) {
 	F32 target_theta;
 	F32 opos_theta;
 	F32 opos_dif;
@@ -20,15 +18,14 @@ extern void opos(F32 x, F32 y, U16 mode) {
 	//F32 opos_I_gain = -2;
 	//F32 opos_D_gain = -20;
 
-	if(mode == 2 || mode == 3) {
-		x += localization_x;
-		y += localization_y;
-	}
 	target_theta = atan2(y-localization_y, x-localization_x);	// 目標地への角度を算出(atan2は-180<=θ<=180の値をとる)
+	/*
 	if(mode == 2 || mode == 3) {
 		target_theta += localization_theta;
 	}
+	*/
 	target_theta = target_theta * 180 / PI;						// rad -> deg
+	//target_theta = (S32)target_theta % 360;
 
 	opos_theta = localization_theta;							// 現在の角度を取得
 	opos_theta = opos_theta * 180 / PI;							// rad -> deg

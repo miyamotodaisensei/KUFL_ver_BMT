@@ -1003,7 +1003,7 @@ void EventSensor(){
 	//--------------------------------
 	//  Event:OPOS end
 	//--------------------------------
-	if(g_Controller.opos_end_flag==1){
+	//if(g_Controller.opos_end_flag == 1) {
 	if(g_Controller.opos_target_x - 50 < localization_x &&  localization_x < g_Controller.opos_target_x +50
 		&& g_Controller.opos_target_y - 50 < localization_y && localization_y < g_Controller.opos_target_y + 50){
 		//ecrobot_sound_tone(600, 50, 30);
@@ -1011,7 +1011,7 @@ void EventSensor(){
 		g_Controller.opos_flag = 0;
 		g_Controller.opos_end_flag = 0;
 	}
-}
+	//}
 
 	//--------------------------------
 	//	Event:sonar
@@ -1164,6 +1164,9 @@ void EventSensor(){
 */
 void setController(void)
 {
+	F32 tmp_x;
+	F32 tmp_y;
+
 	State_t state = getCurrentState();
 
 	switch( state.action_no )
@@ -1232,13 +1235,10 @@ void setController(void)
 
 		//opos
 		case OPOS:
-			g_Controller.opos_mode = state.value0;
-			g_Controller.opos_target_x = (F32)state.value1;
-			g_Controller.opos_target_y = (F32)state.value2;
-			g_Controller.opos_speed = state.value3;
-			opos(g_Controller.opos_target_x, g_Controller.opos_target_y, g_Controller.opos_mode);
-			if(g_Controller.opos_mode == 0) {		// 一度ととまって旋回してから移動(x,yはマップ上)
-				if(g_Controller.opos_flag == 0){
+			opos(g_Controller.opos_target_x, g_Controller.opos_target_y);
+
+			if(g_Controller.opos_mode == 0) {		// 一度ととまって旋回してから移動
+				if(g_Controller.opos_flag == 0) {
 					g_Actuator.forward = 0;
 					g_Actuator.turn = 0;
 					if(abs(g_Sensor.rotate_right_ave) < 2 && abs(g_Sensor.rotate_right_ave < 2)){
@@ -1252,14 +1252,8 @@ void setController(void)
 					g_Actuator.forward = g_Controller.opos_speed;
 				}
 			}
-			else if(g_Controller.opos_mode == 1) {	// そのまま移動(x,yはマップ上)
-				g_Actuator.forward = g_Controller.opos_speed;
-				g_Actuator.turn = opos_turn;
-			}
-			else if(g_Controller.opos_mode == 2) {	// 一度ととまって旋回してから移動(x,yはその場から)
 
-			}
-			else if(g_Controller.opos_mode == 3) {	// そのまま移動(x,yはその場から)
+			else if(g_Controller.opos_mode == 1) {	// そのまま移動
 				g_Actuator.forward = g_Controller.opos_speed;
 				g_Actuator.turn = opos_turn;
 			}
@@ -1273,15 +1267,31 @@ void setController(void)
 			case OPOS_SET:
 			/*opox_mode には locarization_xを入力（０以外）*/
 			g_Controller.opos_mode = state.value0;
-			g_Controller.opos_target_x = g_Controller.opos_target_x+(F32)state.value1;
-			g_Controller.opos_target_y = g_Controller.opos_target_y+(F32)state.value2;
+			g_Controller.opos_target_x = (F32)state.value1;
+			g_Controller.opos_target_y = (F32)state.value2;
 			/*opos_speed には　locarization_yを入力（０以外）*/
 			g_Controller.opos_speed = state.value3;
 			/*コメント部および以下if分はテスト用の仕様　本番前には削除のこと*/
-			if(g_Controller.opos_mode!=0){
-			correct_localization(g_Controller.opos_mode,g_Controller.opos_speed,0,1);
-		}
-			g_Controller.opos_end_flag = 1;
+
+			tmp_x = g_Controller.opos_target_x;
+			tmp_y = g_Controller.opos_target_y;
+			
+			if(g_Controller.opos_mode == 4) {
+				correct_localization(g_Controller.opos_target_x, g_Controller.opos_target_y, 0, 1);
+			}
+
+			if(g_Controller.opos_mode == 2 || g_Controller.opos_mode == 3) {
+				g_Controller.opos_target_x = tmp_x * cos(localization_theta) - tmp_y * sin(localization_theta) + localization_x;
+				g_Controller.opos_target_y = tmp_x * sin(localization_theta) + tmp_y * cos(localization_theta) + localization_y;
+				if(g_Controller.opos_mode == 2) {
+					g_Controller.opos_mode = 0;
+				}
+				else if(g_Controller.opos_mode == 3) {
+					g_Controller.opos_mode = 1;
+				}
+			}
+
+			//g_Controller.opos_end_flag = 1;
 			break;
 
 		//set timer
