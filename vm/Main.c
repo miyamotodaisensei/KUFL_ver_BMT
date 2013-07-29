@@ -1145,7 +1145,7 @@ void EventSensor(){
 		08	set timer
 		09	set motor encoder count
 		10 set pid values
-		11 NOT USED (currently almost same as action 5)
+		11 OPOS_TAIL
 		12 set the offset to identify the step
 		13 up the tail at speed -15
 		14 run with the tail at the linetrace
@@ -1233,7 +1233,7 @@ void setController(void)
 			g_Actuator.StandMode = 3;
 			break;
 
-		//opos
+		//OPOS
 		case OPOS:
 			opos(g_Controller.opos_target_x, g_Controller.opos_target_y);
 
@@ -1264,12 +1264,15 @@ void setController(void)
 			break;
 
 		//OPOS_SET
-			case OPOS_SET:
+		//@param opos_mode:=value0(0,1,2,3)
+		//@param opos_target_x:=value1
+		//@param opos_target_y:=value2
+		//@param opos_speed:=value3(-100~100)
+		case OPOS_SET:
 			/*opox_mode には locarization_xを入力（０以外）*/
 			g_Controller.opos_mode = state.value0;
 			g_Controller.opos_target_x = (F32)state.value1;
 			g_Controller.opos_target_y = (F32)state.value2;
-			/*opos_speed には　locarization_yを入力（０以外）*/
 			g_Controller.opos_speed = state.value3;
 			/*コメント部および以下if分はテスト用の仕様　本番前には削除のこと*/
 
@@ -1326,6 +1329,39 @@ void setController(void)
 			g_Actuator.I_gain = (F32)state.value1 / 100;
 			g_Actuator.D_gain = (F32)state.value2 / 100;
 
+			break;
+
+		//OPOS_TAIL
+		case OPOS_TAIL:
+			g_Actuator.target_tail = state.value0;
+			g_Actuator.TP_gain = (F32)state.value3 / 100;
+
+			opos(g_Controller.opos_target_x, g_Controller.opos_target_y);
+
+			if(g_Controller.opos_mode == 0) {		// 一度ととまって旋回してから移動
+				if(g_Controller.opos_flag == 0) {
+					g_Actuator.forward = 0;
+					g_Actuator.turn = 0;
+					if(abs(g_Sensor.rotate_right_ave) < 2 && abs(g_Sensor.rotate_right_ave < 2)){
+						g_Controller.opos_flag = 1;
+					}
+				}
+				if(g_Controller.opos_flag == 1){
+					g_Actuator.turn = opos_turn;
+				}
+				if(abs(opos_turn) < 1 && g_Controller.opos_flag == 1){
+					g_Actuator.forward = g_Controller.opos_speed;
+				}
+			}
+
+			else if(g_Controller.opos_mode == 1) {	// そのまま移動
+				g_Actuator.forward = g_Controller.opos_speed;
+				g_Actuator.turn = opos_turn;
+			}
+
+			g_Actuator.TraceMode = 0;
+			g_Actuator.StandMode = 3;				// しっぽ走行時のアクション作ったほうがいい
+			g_Controller.opos_end_flag = 1;
 			break;
 
 		//set gyro offset for steps

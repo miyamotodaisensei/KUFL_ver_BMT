@@ -34,6 +34,7 @@ typedef enum ActType
 	TIMER_SET = 8,
 	MOTOR_SET = 9,
 	PID_SET = 10,
+	OPOS_TAIL = 11,
 	STEP_OFFSET_SET = 12,
 	RAISE_TAIL = 13,
 	TAIL_LINETRACE = 14,

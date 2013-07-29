@@ -25,8 +25,7 @@ extern void opos(F32 x, F32 y) {
 	}
 	*/
 	target_theta = target_theta * 180 / PI;						// rad -> deg
-	//target_theta = (S32)target_theta % 360;
-
+	
 	opos_theta = localization_theta;							// Œ»Ý‚ÌŠp“x‚ðŽæ“¾
 	opos_theta = opos_theta * 180 / PI;							// rad -> deg
 	opos_theta = (S32)opos_theta % 360;							// 360“x‚ð’´‚¦‚È‚¢‚æ‚¤‚É‚·‚é
