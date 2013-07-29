@@ -1235,7 +1235,7 @@ void setController(void)
 
 		//OPOS
 		case OPOS:
-			opos(g_Controller.opos_target_x, g_Controller.opos_target_y);
+			opos(g_Controller.opos_target_x, g_Controller.opos_target_y, g_Controller.opos_speed);
 
 			if(g_Controller.opos_mode == 0) {		// 一度ととまって旋回してから移動
 				if(g_Controller.opos_flag == 0) {
@@ -1294,6 +1294,8 @@ void setController(void)
 				}
 			}
 
+			init_opos();
+
 			//g_Controller.opos_end_flag = 1;
 			break;
 
@@ -1336,7 +1338,7 @@ void setController(void)
 			g_Actuator.target_tail = state.value0;
 			g_Actuator.TP_gain = (F32)state.value3 / 100;
 
-			opos(g_Controller.opos_target_x, g_Controller.opos_target_y);
+			opos(g_Controller.opos_target_x, g_Controller.opos_target_y, g_Controller.opos_speed);
 
 			if(g_Controller.opos_mode == 0) {		// 一度ととまって旋回してから移動
 				if(g_Controller.opos_flag == 0) {
