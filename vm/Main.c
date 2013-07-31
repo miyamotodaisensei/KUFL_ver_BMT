@@ -1003,15 +1003,14 @@ void EventSensor(){
 	//--------------------------------
 	//  Event:OPOS end
 	//--------------------------------
-	//if(g_Controller.opos_end_flag == 1) {
-	if(g_Controller.opos_target_x - 50 < localization_x &&  localization_x < g_Controller.opos_target_x +50
-		&& g_Controller.opos_target_y - 50 < localization_y && localization_y < g_Controller.opos_target_y + 50){
-		//ecrobot_sound_tone(600, 50, 30);
+	if(g_Controller.opos_end_flag == 1) {
+		if(pow(localization_x - g_Controller.opos_target_x, 2) + pow(localization_y - g_Controller.opos_target_y, 2) < pow(15, 2)) {
+		ecrobot_sound_tone(600, 50, 100);
 		setEvent(OPOS_END);
 		g_Controller.opos_flag = 0;
 		g_Controller.opos_end_flag = 0;
+		}
 	}
-	//}
 
 	//--------------------------------
 	//	Event:sonar
@@ -1296,7 +1295,7 @@ void setController(void)
 
 			init_opos();
 
-			//g_Controller.opos_end_flag = 1;
+			g_Controller.opos_end_flag = 1;
 			break;
 
 		//set timer
