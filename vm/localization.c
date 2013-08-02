@@ -102,8 +102,13 @@ extern void correct_localization(F32 x, F32 y, F32 theta, F32 mode) {
 		localization_y = y;
 		localization_theta = theta;
 	}
+	else if(mode == 1) {
+		localization_x = x;
+		localization_y = y;
+	}
 	else {
 		localization_x = x;
 		localization_y = y;
+		localization_theta = theta / 180 * PI;
 	}
 }

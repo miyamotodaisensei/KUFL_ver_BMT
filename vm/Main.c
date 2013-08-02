@@ -1268,19 +1268,13 @@ void setController(void)
 		//@param opos_target_y:=value2
 		//@param opos_speed:=value3(-100~100)
 		case OPOS_SET:
-			/*opox_mode には locarization_xを入力（０以外）*/
 			g_Controller.opos_mode = state.value0;
 			g_Controller.opos_target_x = (F32)state.value1;
 			g_Controller.opos_target_y = (F32)state.value2;
 			g_Controller.opos_speed = state.value3;
-			/*コメント部および以下if分はテスト用の仕様　本番前には削除のこと*/
 
 			tmp_x = g_Controller.opos_target_x;
 			tmp_y = g_Controller.opos_target_y;
-			
-			if(g_Controller.opos_mode == 4) {
-				correct_localization(g_Controller.opos_target_x, g_Controller.opos_target_y, 0, 1);
-			}
 
 			if(g_Controller.opos_mode == 2 || g_Controller.opos_mode == 3) {
 				g_Controller.opos_target_x = tmp_x * cos(localization_theta) - tmp_y * sin(localization_theta) + localization_x;
@@ -1449,16 +1443,8 @@ void setController(void)
 			g_Controller.target_distance = state.value0;
 			break;
 
-		case SERACH_BOTTLE_RIGHT:
-			/*
-			g_Actuator.forward = 0;
-
-			if( g_Controller.bottle_right_flag == 0 )
-			{
-				g_Controller.bottle_right_length = state.value0;
-				g_Controller.bottle_right_flag = 1;
-			}
-			*/
+		case CORRECT_LOCALIZATION:
+			correct_localization(state.value1, state.value2, state.value3, state.value0);
 			break;
 
 		case SEARCH_BOTTLE_LEFT:
