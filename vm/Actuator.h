@@ -12,12 +12,13 @@ typedef struct tag_Actuator
 	/* 倒立モード */
 	/* 0:倒立なし / 1:バランスとって立つ / 2:しっぽで立つ */
 	U8 StandMode;
-	
+
 	S8 forward;
 	S8 turn;
 
 	U16 black;
 	U16 white;
+	U16 mouse_white;
 	U16 target_gray;
 	U16 target_gray_base;
 
@@ -35,7 +36,7 @@ typedef struct tag_Actuator
 	S32 pre_dif;
 	S32 differential;
 	F32 integral;
-	
+
 	U16 step_offset;
 
 	U8 target_tail;

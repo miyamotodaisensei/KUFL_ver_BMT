@@ -34,6 +34,7 @@ typedef enum _MainTaskState
 	TARGETCALIB,
 	WHITECALIB,
 	BLACKCALIB,
+	MOUSECALIB,
 	ACTION
 }MainTaskState_e;
 
@@ -253,9 +254,11 @@ TASK(TaskMain)
 		        display_string("CLBWhite:TRUE");
 		        display_goto_xy(1, 3);
 		        display_string("CLBBlack:TRUE");
-		        display_goto_xy(1,4);
-		        display_string("CLBGrat:TRUE");
-		        display_goto_xy(0, 5);
+		        display_goto_xy(1, 4);
+		        display_string("CLBMouse:TRUE");
+		        display_goto_xy(1, 5);
+		        display_string("CLBGray:TRUE");
+		        display_goto_xy(0, 6);
 		        display_string("kfkfModel:ON");
 		        display_update();
 		        ecrobot_sound_tone(880, 50, 30);
@@ -338,6 +341,50 @@ TASK(TaskMain)
 		        display_goto_xy(1, 3);
 		        display_string("CLBBlack:TRUE");
 		        display_goto_xy(1, 4);
+		        display_string("CLBMouse:FALSE");
+		        display_update();
+		        ecrobot_sound_tone(880, 50, 30);
+
+		        /* 状態遷移: TARGETCALIB */
+				g_MTState = MOUSECALIB;
+			}
+			break;
+
+		/*----------------------------------------------*/
+		/*	キャリブレーション(灰色)					*/
+		/*----------------------------------------------*/
+			case MOUSECALIB:
+			if( g_Sensor.touch == 1 )
+			{
+				ecrobot_sound_tone(440, 50, 30);
+				g_CalibFlag = 1;
+			}
+
+			if( g_CalibFlag == 1 )
+			{
+				g_CalibCnt++;
+				g_CalibLightSum += g_Sensor.light;
+			}
+
+			if(g_CalibCnt >= 100)
+			{
+				g_Actuator.mouse_white = (U16)(g_CalibLightSum / g_CalibCnt);
+				g_CalibFlag = 0;
+				g_CalibLightSum = 0;
+				g_CalibCnt = 0;
+
+		        display_clear(0);
+				display_goto_xy(0, 0);
+				display_string("Prep:TRUE");
+		        display_goto_xy(1, 1);
+		        display_string("BT:TRUE");
+		        display_goto_xy(1, 2);
+		        display_string("CLBWhite:TRUE");
+		        display_goto_xy(1, 3);
+		        display_string("CLBBlack:TRUE");
+		        display_goto_xy(1, 4);
+		        display_string("CLBMouse:TRUE");
+		        display_goto_xy(1, 5);
 		        display_string("CLBGray:FALSE");
 		        display_update();
 		        ecrobot_sound_tone(880, 50, 30);
@@ -372,7 +419,7 @@ TASK(TaskMain)
 	Description: センシング
 ===============================================================================================
 */
-#define LIGHT_BUFFER_LENGTH_MAX 250
+#define LIGHT_BUFFER_LENGTH_MAX 50
 #define ROTATE_E 166
 
 /*==================================================*/
@@ -546,7 +593,7 @@ TASK(TaskActuator)
 		}
 		else if( g_Actuator.TraceMode == 2 )
 		{
-			/* 未定 */
+			g_Actuator.dif = g_Sensor.light - g_Actuator.mouse_white;
 		}
 
 		g_Actuator.differential = g_Actuator.dif - g_Actuator.pre_dif;
@@ -589,7 +636,7 @@ TASK(TaskActuator)
 			&g_pwm_L,
 			&g_pwm_R
 		);
-}	
+}
 	else if( g_Actuator.StandMode == 3 )
 	{
 
@@ -611,7 +658,7 @@ TASK(TaskActuator)
 		{
 			g_pwm_R = 100 * g_pwm_R / abs(g_pwm_L);
 			g_pwm_L = 100 * g_pwm_L / abs(g_pwm_L);
-			
+
 
 		}
 		else if(abs(g_pwm_R) > 100)
@@ -847,6 +894,7 @@ void InitNXT()
 	g_Actuator.turn = 0;
 	g_Actuator.black = 800;
 	g_Actuator.white = 400;
+	g_Actuator.mouse_white = 600;
 	g_Actuator.target_gray = 600;
 	g_Actuator.target_gray_base = g_Actuator.target_gray;
 	//g_Actuator.threshold_gray = g_Actuator.target_gray;
@@ -904,6 +952,7 @@ void InitNXT()
 	*/
 	g_Controller.curb_flag = 0;
 	g_Controller.curb_judge = 0;
+	g_Controller.gray_flag = 0;
 }
 
 /*
@@ -930,6 +979,8 @@ void InitNXT()
 		->STRAIGHT
 		14 (some event2)
 		->CURB
+		15 mouse
+		16 return
  	Parameter: no
 	Return Value: no
 ===============================================================================================
@@ -985,7 +1036,7 @@ void EventSensor(){
 	if( g_Actuator.gray_offset - 10 < g_Sensor.light_ave && g_Sensor.light_ave < g_Actuator.gray_offset + 10  )
 	{
 		setEvent(GRAY_MARKER);
-		g_Actuator.TraceMode = 2;
+		g_Actuator.TraceMode = 1;
 	}
 	else
 	{
@@ -1120,7 +1171,23 @@ void EventSensor(){
 			g_Controller.curb_flag = 0;
 		}
 	}
-	//
+
+	if(g_Controller.gray_flag == 0){
+		if( g_Actuator.mouse_white - 10 < g_Sensor.light_ave && g_Sensor.light_ave < g_Actuator.mouse_white + 10 )
+		{
+			setEvent(MOUSE_CHANGE);
+			g_Controller.gray_flag = 1;
+		}
+	}
+
+	else if(g_Controller.gray_flag == 1){
+		ecrobot_sound_tone(600, 30, 30);
+		if( g_Actuator.mouse_white - 10 >= g_Sensor.light || g_Sensor.light >= g_Actuator.mouse_white + 10 )
+		{
+			setEvent(RETURN_MOUSE);
+			g_Controller.gray_flag = 0;
+		}
+	}
 	setNextState();
 
 }
@@ -1136,6 +1203,7 @@ void EventSensor(){
 		01	balanced stop
 		02	run at the balanced linetrace
 		03	change the gyro offset
+		->	balance_mousetrace
 		04	change the gray threshold
 		05	run with tail (do NOT linetrace)
 		06	down the tail at speed 15
@@ -1194,14 +1262,19 @@ void setController(void)
 
 			g_Actuator.TraceMode = 1;
 			g_Actuator.StandMode = 1;
-
 			break;
 
 		//change the gray threshold
 		//@param new threshold:=value0
-		case CHANGE_GRAY:
-			g_Actuator.target_gray = g_Actuator.target_gray_base + state.value0;
+		case BALANCE_MOUSETRACE://CHANGE_GRAY://灰色を走行する
+			//g_Actuator.target_gray = g_Actuator.target_gray_base + state.value0;
+			g_Actuator.forward = state.value0;
+			g_Actuator.gyro_offset = g_Actuator.gyro_offset_base + state.value1;
 
+			g_Actuator.TraceMode = 2;
+			g_Actuator.StandMode = 1;
+			
+			g_Controller.gray_flag = 1;
 			break;
 
 		//run with no linetrace without balance
@@ -1214,7 +1287,7 @@ void setController(void)
 			g_Actuator.forward = state.value1;
 			g_Actuator.turn = state.value2;
 			g_Actuator.TP_gain = (F32)state.value3 / 100;
-			
+
 			/*if(state.value0 == 0){
 				free_right = 0.0;
 				free_left  = 0.0;
@@ -1224,7 +1297,7 @@ void setController(void)
 				free_right = g_Sensor.count_right;
 				free_left = g_Sensor.count_left;
 			}*/
-			
+
 
 			g_Actuator.TraceMode = 0;
 			g_Actuator.StandMode = 3;
