@@ -34,6 +34,7 @@ typedef enum ActType
 	TIMER_SET = 8,
 	MOTOR_SET = 9,
 	PID_SET = 10,
+	OPOS_TAIL = 11,
 	STEP_OFFSET_SET = 12,
 	RAISE_TAIL = 13,
 	TAIL_LINETRACE = 14,
@@ -125,9 +126,9 @@ typedef struct tag_Controller
 	U8 opos_end_flag;
 	F32 opos_target_x;
 	F32 opos_target_y;
-	U16 opos_mode;
-	U16 opos_speed;
-	U16 opos_flag;
+	U8 opos_mode;
+	S8 opos_speed;
+	U8 opos_flag;
 	/*ここまで*/
 
 	/*

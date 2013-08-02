@@ -1054,15 +1054,14 @@ void EventSensor(){
 	//--------------------------------
 	//  Event:OPOS end
 	//--------------------------------
-	if(g_Controller.opos_end_flag==1){
-	if(g_Controller.opos_target_x - 50 < localization_x &&  localization_x < g_Controller.opos_target_x +50
-		&& g_Controller.opos_target_y - 50 < localization_y && localization_y < g_Controller.opos_target_y + 50){
-		//ecrobot_sound_tone(600, 50, 30);
+	if(g_Controller.opos_end_flag == 1) {
+		if(pow(localization_x - g_Controller.opos_target_x, 2) + pow(localization_y - g_Controller.opos_target_y, 2) < pow(15, 2)) {
+		ecrobot_sound_tone(600, 50, 100);
 		setEvent(OPOS_END);
 		g_Controller.opos_flag = 0;
 		g_Controller.opos_end_flag = 0;
+		}
 	}
-}
 
 	//--------------------------------
 	//	Event:sonar
@@ -1213,7 +1212,7 @@ void EventSensor(){
 		08	set timer
 		09	set motor encoder count
 		10 set pid values
-		11 NOT USED (currently almost same as action 5)
+		11 OPOS_TAIL
 		12 set the offset to identify the step
 		13 up the tail at speed -15
 		14 run with the tail at the linetrace
@@ -1232,6 +1231,9 @@ void EventSensor(){
 */
 void setController(void)
 {
+	F32 tmp_x;
+	F32 tmp_y;
+
 	State_t state = getCurrentState();
 
 	switch( state.action_no )
@@ -1303,15 +1305,12 @@ void setController(void)
 			g_Actuator.StandMode = 3;
 			break;
 
-		//opos
+		//OPOS
 		case OPOS:
-			g_Controller.opos_mode = state.value0;
-			g_Controller.opos_target_x = (F32)state.value1;
-			g_Controller.opos_target_y = (F32)state.value2;
-			g_Controller.opos_speed = state.value3;
-			opos(g_Controller.opos_target_x, g_Controller.opos_target_y, g_Controller.opos_mode);
-			if(g_Controller.opos_mode == 0) {		// 一度ととまって旋回してから移動(x,yはマップ上)
-				if(g_Controller.opos_flag == 0){
+			opos(g_Controller.opos_target_x, g_Controller.opos_target_y, g_Controller.opos_speed);
+
+			if(g_Controller.opos_mode == 0) {		// 一度ととまって旋回してから移動
+				if(g_Controller.opos_flag == 0) {
 					g_Actuator.forward = 0;
 					g_Actuator.turn = 0;
 					if(abs(g_Sensor.rotate_right_ave) < 2 && abs(g_Sensor.rotate_right_ave < 2)){
@@ -1325,14 +1324,8 @@ void setController(void)
 					g_Actuator.forward = g_Controller.opos_speed;
 				}
 			}
-			else if(g_Controller.opos_mode == 1) {	// そのまま移動(x,yはマップ上)
-				g_Actuator.forward = g_Controller.opos_speed;
-				g_Actuator.turn = opos_turn;
-			}
-			else if(g_Controller.opos_mode == 2) {	// 一度ととまって旋回してから移動(x,yはその場から)
 
-			}
-			else if(g_Controller.opos_mode == 3) {	// そのまま移動(x,yはその場から)
+			else if(g_Controller.opos_mode == 1) {	// そのまま移動
 				g_Actuator.forward = g_Controller.opos_speed;
 				g_Actuator.turn = opos_turn;
 			}
@@ -1343,17 +1336,38 @@ void setController(void)
 			break;
 
 		//OPOS_SET
-			case OPOS_SET:
+		//@param opos_mode:=value0(0,1,2,3)
+		//@param opos_target_x:=value1
+		//@param opos_target_y:=value2
+		//@param opos_speed:=value3(-100~100)
+		case OPOS_SET:
 			/*opox_mode には locarization_xを入力（０以外）*/
 			g_Controller.opos_mode = state.value0;
-			g_Controller.opos_target_x = g_Controller.opos_target_x+(F32)state.value1;
-			g_Controller.opos_target_y = g_Controller.opos_target_y+(F32)state.value2;
-			/*opos_speed には　locarization_yを入力（０以外）*/
+			g_Controller.opos_target_x = (F32)state.value1;
+			g_Controller.opos_target_y = (F32)state.value2;
 			g_Controller.opos_speed = state.value3;
 			/*コメント部および以下if分はテスト用の仕様　本番前には削除のこと*/
-			if(g_Controller.opos_mode!=0){
-			correct_localization(g_Controller.opos_mode,g_Controller.opos_speed,0,1);
-		}
+
+			tmp_x = g_Controller.opos_target_x;
+			tmp_y = g_Controller.opos_target_y;
+			
+			if(g_Controller.opos_mode == 4) {
+				correct_localization(g_Controller.opos_target_x, g_Controller.opos_target_y, 0, 1);
+			}
+
+			if(g_Controller.opos_mode == 2 || g_Controller.opos_mode == 3) {
+				g_Controller.opos_target_x = tmp_x * cos(localization_theta) - tmp_y * sin(localization_theta) + localization_x;
+				g_Controller.opos_target_y = tmp_x * sin(localization_theta) + tmp_y * cos(localization_theta) + localization_y;
+				if(g_Controller.opos_mode == 2) {
+					g_Controller.opos_mode = 0;
+				}
+				else if(g_Controller.opos_mode == 3) {
+					g_Controller.opos_mode = 1;
+				}
+			}
+
+			init_opos();
+
 			g_Controller.opos_end_flag = 1;
 			break;
 
@@ -1389,6 +1403,39 @@ void setController(void)
 			g_Actuator.I_gain = (F32)state.value1 / 100;
 			g_Actuator.D_gain = (F32)state.value2 / 100;
 
+			break;
+
+		//OPOS_TAIL
+		case OPOS_TAIL:
+			g_Actuator.target_tail = state.value0;
+			g_Actuator.TP_gain = (F32)state.value3 / 100;
+
+			opos(g_Controller.opos_target_x, g_Controller.opos_target_y, g_Controller.opos_speed);
+
+			if(g_Controller.opos_mode == 0) {		// 一度ととまって旋回してから移動
+				if(g_Controller.opos_flag == 0) {
+					g_Actuator.forward = 0;
+					g_Actuator.turn = 0;
+					if(abs(g_Sensor.rotate_right_ave) < 2 && abs(g_Sensor.rotate_right_ave < 2)){
+						g_Controller.opos_flag = 1;
+					}
+				}
+				if(g_Controller.opos_flag == 1){
+					g_Actuator.turn = opos_turn;
+				}
+				if(abs(opos_turn) < 1 && g_Controller.opos_flag == 1){
+					g_Actuator.forward = g_Controller.opos_speed;
+				}
+			}
+
+			else if(g_Controller.opos_mode == 1) {	// そのまま移動
+				g_Actuator.forward = g_Controller.opos_speed;
+				g_Actuator.turn = opos_turn;
+			}
+
+			g_Actuator.TraceMode = 0;
+			g_Actuator.StandMode = 3;				// しっぽ走行時のアクション作ったほうがいい
+			g_Controller.opos_end_flag = 1;
 			break;
 
 		//set gyro offset for steps
@@ -1558,11 +1605,11 @@ void my_ecrobot_bt_data_logger(S8 data1, S8 data2)
 	*((S32 *)(&data_log_buffer[16])) = (S32)nxt_motor_get_count(LEFT_MOTOR);
 	*((S16 *)(&data_log_buffer[20])) = (S16)ecrobot_get_gyro_sensor(GYRO_SENSOR);
 	//*((S16 *)(&data_log_buffer[22])) = (S16)ecrobot_get_sonar_sensor(SONAR_SENSOR);
-	*((S16 *)(&data_log_buffer[28])) = (S16)ecrobot_get_light_sensor(LIGHT_SENSOR);
+	*((S16 *)(&data_log_buffer[22])) = (S16)ecrobot_get_light_sensor(LIGHT_SENSOR);
 	//*((S16 *)(&data_log_buffer[26])) = (S16)ecrobot_get_touch_sensor(TOUCH_SENSOR);
-	*((S16 *)(&data_log_buffer[22])) = (S16)localization_x;
-	*((S16 *)(&data_log_buffer[24])) = (S16)localization_y;
-	*((S16 *)(&data_log_buffer[26])) = (S16)localization_theta;
+	*((S16 *)(&data_log_buffer[24])) = (S16)localization_x;
+	*((S16 *)(&data_log_buffer[26])) = (S16)localization_y;
+	*((S32 *)(&data_log_buffer[28])) = (S32)localization_theta;
 	//*((S32 *)(&data_log_buffer[28])) = (S32)ecrobot_get_sonar_sensor(SONAR_SENSOR);
 	ecrobot_send_bt_packet(data_log_buffer, 32);
 }
