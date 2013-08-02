@@ -1532,11 +1532,11 @@ void my_ecrobot_bt_data_logger(S8 data1, S8 data2)
 	*((S32 *)(&data_log_buffer[16])) = (S32)nxt_motor_get_count(LEFT_MOTOR);
 	*((S16 *)(&data_log_buffer[20])) = (S16)ecrobot_get_gyro_sensor(GYRO_SENSOR);
 	//*((S16 *)(&data_log_buffer[22])) = (S16)ecrobot_get_sonar_sensor(SONAR_SENSOR);
-	*((S16 *)(&data_log_buffer[28])) = (S16)ecrobot_get_light_sensor(LIGHT_SENSOR);
+	*((S16 *)(&data_log_buffer[22])) = (S16)ecrobot_get_light_sensor(LIGHT_SENSOR);
 	//*((S16 *)(&data_log_buffer[26])) = (S16)ecrobot_get_touch_sensor(TOUCH_SENSOR);
-	*((S16 *)(&data_log_buffer[22])) = (S16)localization_x;
-	*((S16 *)(&data_log_buffer[24])) = (S16)localization_y;
-	*((S16 *)(&data_log_buffer[26])) = (S16)localization_theta;
+	*((S16 *)(&data_log_buffer[24])) = (S16)localization_x;
+	*((S16 *)(&data_log_buffer[26])) = (S16)localization_y;
+	*((S32 *)(&data_log_buffer[28])) = (S32)localization_theta;
 	//*((S32 *)(&data_log_buffer[28])) = (S32)ecrobot_get_sonar_sensor(SONAR_SENSOR);
 	ecrobot_send_bt_packet(data_log_buffer, 32);
 }
