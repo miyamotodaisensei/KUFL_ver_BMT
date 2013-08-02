@@ -238,6 +238,7 @@ TASK(TaskMain)
 			{
 				g_Actuator.gyro_offset = (U16)(g_CalibGyroSum / g_CalibCnt);
 				g_Actuator.target_gray = (U16)(g_CalibLightSum / g_CalibCnt);
+				g_Actuator.gyro_offset_base = g_Actuator.gyro_offset;
 				g_Actuator.target_gray_base = g_Actuator.target_gray;
 				g_CalibFlag = 0;
 				g_CalibGyroSum = 0;
