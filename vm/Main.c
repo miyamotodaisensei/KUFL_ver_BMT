@@ -455,7 +455,7 @@ TASK(TaskSensor)
 	g_Sensor.rotate_left[rotate_counter] = g_Sensor.count_left;
 	g_Sensor.rotate_left[rotate_counter] -= pre_rotate_left;
 	g_Sensor.rotate_right[rotate_counter] = g_Sensor.count_right;
-	g_Sensor.rotate_right[rotate_counter] -= pre_rotate_left;
+	g_Sensor.rotate_right[rotate_counter] -= pre_rotate_right;
 
 	rotate_counter++;
 
