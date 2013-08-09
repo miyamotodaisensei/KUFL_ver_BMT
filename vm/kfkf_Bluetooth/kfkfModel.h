@@ -26,7 +26,7 @@ typedef enum ActType
 	DO_NOTHING = 0,
 	BALANCE_STOP = 1,
 	BALANCE_LINETRACE = 2,
-	CHANGE_GRAY = 4,
+	BALANCE_MOUSETRACE = 4,
 	TAIL_RUN_FREEDOM = 5,
 	/*追加機能*/
 	OPOS = 6,
@@ -70,7 +70,9 @@ typedef enum EvtType
 	BT_START = 11,
 	PIVOT_TURN_END = 12,
 	STRAIGHT = 13,
-	CURB = 14
+	CURB = 14,
+	MOUSE_CHANGE = 15,
+	RETURN_MOUSE = 7
 }EvtType_e;
 
 /*
@@ -138,6 +140,8 @@ typedef struct tag_Controller
 	*/
 	U8 curb_flag;
 	U8 curb_judge;
+	U8 gray_flag;
+	U8 dif_Light;
 
 }Controller_t;
 

@@ -22,6 +22,8 @@ typedef struct tag_Sensor
 	U16 rotate_right_ave;
 	U16 count_tail;
 	U16 battery;
+	U16 realblack;
+	U16 realwhite;
 	/*
 	U8 bottle_is_left;
 	U8 bottle_is_right;

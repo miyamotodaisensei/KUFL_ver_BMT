@@ -19,7 +19,7 @@ CPU ATMEL_AT91SAM7S256
   TASK TaskMain
   {
     AUTOSTART = TRUE
-    { 
+    {
     	APPMODE = appmode1;
     };
     PRIORITY = 5;
@@ -27,7 +27,7 @@ CPU ATMEL_AT91SAM7S256
     SCHEDULE = FULL;
     STACKSIZE = 512;
   };
-  
+
   TASK TaskSensor
   {
     AUTOSTART = TRUE
@@ -39,7 +39,7 @@ CPU ATMEL_AT91SAM7S256
     SCHEDULE = FULL;
     STACKSIZE = 512;
   };
-  
+
   TASK TaskActuator
   {
     AUTOSTART = TRUE
@@ -51,7 +51,7 @@ CPU ATMEL_AT91SAM7S256
     SCHEDULE = FULL;
     STACKSIZE = 512;
   };
-  
+
   TASK TaskLogger
   {
     AUTOSTART = TRUE
@@ -80,10 +80,10 @@ CPU ATMEL_AT91SAM7S256
   {
     MINCYCLE = 1;
     MAXALLOWEDVALUE = 10000;
-    TICKSPERBASE = 1; 
+    TICKSPERBASE = 1;
   };
 
-  ALARM cyclic_alarm1		
+  ALARM cyclic_alarm1
   {
     COUNTER = SysTimerCnt;
     ACTION = ACTIVATETASK
@@ -97,8 +97,8 @@ CPU ATMEL_AT91SAM7S256
       APPMODE = appmode1;
     };
   };
-  
-  ALARM cyclic_alarm2		
+
+  ALARM cyclic_alarm2
   {
     COUNTER = SysTimerCnt;
     ACTION = ACTIVATETASK
@@ -112,7 +112,7 @@ CPU ATMEL_AT91SAM7S256
       APPMODE = appmode1;
     };
   };
-  
+
   ALARM cyclic_alarm3
   {
     COUNTER = SysTimerCnt;
