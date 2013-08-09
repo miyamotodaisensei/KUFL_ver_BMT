@@ -16,8 +16,8 @@ typedef struct tag_Actuator
 	S8 forward;
 	S8 turn;
 
-	U16 black;
-	U16 white;
+	U32 black;
+	U32 white;
 	U16 mouse_white;
 	U16 target_gray;
 	U16 target_gray_base;

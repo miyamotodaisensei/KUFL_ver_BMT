@@ -72,7 +72,7 @@ typedef enum EvtType
 	STRAIGHT = 13,
 	CURB = 14,
 	MOUSE_CHANGE = 15,
-	RETURN_MOUSE = 16
+	RETURN_MOUSE = 7
 }EvtType_e;
 
 /*
@@ -141,6 +141,7 @@ typedef struct tag_Controller
 	U8 curb_flag;
 	U8 curb_judge;
 	U8 gray_flag;
+	U8 dif_Light;
 
 }Controller_t;
 

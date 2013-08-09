@@ -238,8 +238,6 @@ TASK(TaskMain)
 			if(g_CalibCnt >= 100)
 			{
 				g_Actuator.gyro_offset = (U16)(g_CalibGyroSum / g_CalibCnt);
-				g_Actuator.target_gray = (U16)(g_CalibLightSum / g_CalibCnt);
-				g_Actuator.target_gray_base = g_Actuator.target_gray;
 				g_CalibFlag = 0;
 				g_CalibGyroSum = 0;
 				g_CalibLightSum = 0;
@@ -257,7 +255,7 @@ TASK(TaskMain)
 		        display_goto_xy(1, 4);
 		        display_string("CLBMouse:TRUE");
 		        display_goto_xy(1, 5);
-		        display_string("CLBGray:TRUE");
+		        display_string("CLBGyro:TRUE");
 		        display_goto_xy(0, 6);
 		        display_string("kfkfModel:ON");
 		        display_update();
@@ -287,6 +285,7 @@ TASK(TaskMain)
 			if(g_CalibCnt >= 100)
 			{
 				g_Actuator.white = (U16)(g_CalibLightSum / g_CalibCnt);
+				g_Sensor.realwhite = g_Actuator.white;
 				g_CalibFlag = 0;
 				g_CalibLightSum = 0;
 				g_CalibCnt = 0;
@@ -327,6 +326,7 @@ TASK(TaskMain)
 			if(g_CalibCnt >= 100)
 			{
 				g_Actuator.black = (U16)(g_CalibLightSum / g_CalibCnt);
+				g_Sensor.realblack = g_Actuator.black;
 				g_CalibFlag = 0;
 				g_CalibLightSum = 0;
 				g_CalibCnt = 0;
@@ -385,7 +385,7 @@ TASK(TaskMain)
 		        display_goto_xy(1, 4);
 		        display_string("CLBMouse:TRUE");
 		        display_goto_xy(1, 5);
-		        display_string("CLBGray:FALSE");
+		        display_string("CLBGyro:FALSE");
 		        display_update();
 		        ecrobot_sound_tone(880, 50, 30);
 
@@ -419,8 +419,9 @@ TASK(TaskMain)
 	Description: センシング
 ===============================================================================================
 */
-#define LIGHT_BUFFER_LENGTH_MAX 50
+#define LIGHT_BUFFER_LENGTH_MAX 250
 #define ROTATE_E 166
+#define ab 2
 
 /*==================================================*/
 /*	変数											*/
@@ -438,7 +439,13 @@ TASK(TaskSensor)
 	U8 i = 0;
 	U16 pre_rotate_left;
 	U16 pre_rotate_right;
-
+	U16 max_Light=0;
+	U16 min_Light=0;
+	U16 light_dif=0;
+	U16 countB=0;
+	U16 countW=0;
+	U8  DCflag=0;
+	U16 DC;
 	//==========================================
 	//	Data Update of Sensor
 	//==========================================
@@ -453,14 +460,65 @@ TASK(TaskSensor)
 	if( g_LightCnt >= LIGHT_BUFFER_LENGTH_MAX )
 	{
 		g_LightCnt = 0;
+		DCflag=1;
 	}
 
-	for(i=0;i < LIGHT_BUFFER_LENGTH_MAX;i++)
-	{
+	min_Light = 1000;
+	max_Light = 0;
+	
+	light_dif = g_Actuator.black - g_Actuator.white;
+	if(DCflag == 1){
+		g_Actuator.black = 0;
+		g_Actuator.white = 0;
+	}
+
+	DC = (g_Sensor.realblack * 2 / 5 + g_Sensor.realwhite * 3 /5);
+
+	for(i=0; i<LIGHT_BUFFER_LENGTH_MAX; i++) {
 		g_LightAve += g_LightBuffer[i];
+		if(DCflag == 1){
+			if(g_LightBuffer[i] >= DC + (g_Sensor.realblack - DC) * 1 / 3){
+				g_Actuator.black += g_LightBuffer[i];
+				countB++;
+			}
+			if(g_LightBuffer[i] < DC - (DC - g_Sensor.realwhite) * 2 / 5){
+				g_Actuator.white += g_LightBuffer[i];
+				countW++;
+			}
+		}
+		if(min_Light > g_LightBuffer[i]){
+			min_Light = g_LightBuffer[i];
+		}
+		if(max_Light < g_LightBuffer[i]){
+			max_Light = g_LightBuffer[i];
+		}
 	}
+	
 	g_Sensor.light_ave = (U16)(g_LightAve / LIGHT_BUFFER_LENGTH_MAX);
+	
+	if(DCflag == 1){
+		g_Actuator.black /= countB;
+		g_Actuator.white /= countW;
+		DCflag = 0;
+	}
 
+	if(DC >= g_Actuator.black){
+		g_Actuator.black = g_Sensor.realblack; // - (g_Sensor.realblack - g_Sensor.realwhite) / ab;
+	}
+	if(DC < g_Actuator.white){
+		g_Actuator.white = g_Sensor.realwhite; //+ (g_Sensor.realblack - g_Sensor.realwhite) / ab;
+	}
+	if(g_Actuator.black == 0){
+		g_Actuator.black = g_Sensor.realblack;// + (g_Sensor.realblack - g_Sensor.realwhite) * 2  / 5;
+	}	
+	if(g_Actuator.white == 0){
+		g_Actuator.white = g_Sensor.realwhite;// + (g_Sensor.realblack - g_Sensor.realwhite) * 2  / 5;
+	}
+	/*else if((g_Sensor.realwhite - (g_Sensor.realblack - g_Sensor.realwhite) * 2 / 5) > g_Actuator.white){
+		g_Actuator.white = g_Sensor.realwhite - (g_Sensor.realblack - g_Sensor.realwhite) * 2 / 5;
+	}*/
+	g_Actuator.target_gray = (g_Actuator.black * 2 / 5 + g_Actuator.white * 3 /5);
+	g_Controller.dif_Light = max_Light - min_Light;
 	//--------------------------------
 	//	Gyro Data
 	//--------------------------------
@@ -879,6 +937,8 @@ void InitNXT()
 	}
 	g_Sensor.rotate_left_ave = 0;
 	g_Sensor.rotate_right_ave = 0;
+	g_Sensor.realblack = 800;
+	g_Sensor.realwhite = 400;
 	g_Sensor.battery = 600;
 	/*
 	g_Sensor.bottle_is_left = 0;
@@ -953,6 +1013,7 @@ void InitNXT()
 	g_Controller.curb_flag = 0;
 	g_Controller.curb_judge = 0;
 	g_Controller.gray_flag = 0;
+	g_Controller.dif_Light = 0;
 }
 
 /*
@@ -1172,16 +1233,15 @@ void EventSensor(){
 	}
 
 	if(g_Controller.gray_flag == 0){
-		if( g_Actuator.mouse_white - 10 < g_Sensor.light_ave && g_Sensor.light_ave < g_Actuator.mouse_white + 10 )
+		if( g_Controller.dif_Light < g_Actuator.target_gray - g_Actuator.mouse_white )
 		{
 			setEvent(MOUSE_CHANGE);
 			g_Controller.gray_flag = 1;
 		}
 	}
 
-	else if(g_Controller.gray_flag == 1){
-		ecrobot_sound_tone(600, 30, 30);
-		if( g_Actuator.mouse_white - 10 >= g_Sensor.light || g_Sensor.light >= g_Actuator.mouse_white + 10 )
+	if(g_Controller.gray_flag == 1){
+		if( g_Controller.dif_Light > (g_Actuator.target_gray - g_Actuator.mouse_white))
 		{
 			setEvent(RETURN_MOUSE);
 			g_Controller.gray_flag = 0;
@@ -1264,6 +1324,7 @@ void setController(void)
 
 			g_Actuator.TraceMode = 1;
 			g_Actuator.StandMode = 1;
+			g_Controller.gray_flag = 1;
 			break;
 
 		//change the gray threshold
@@ -1275,8 +1336,8 @@ void setController(void)
 
 			g_Actuator.TraceMode = 2;
 			g_Actuator.StandMode = 1;
-			
-			g_Controller.gray_flag = 1;
+
+			g_Controller.gray_flag = 0;
 			break;
 
 		//run with no linetrace without balance
@@ -1350,7 +1411,7 @@ void setController(void)
 
 			tmp_x = g_Controller.opos_target_x;
 			tmp_y = g_Controller.opos_target_y;
-			
+
 			if(g_Controller.opos_mode == 4) {
 				correct_localization(g_Controller.opos_target_x, g_Controller.opos_target_y, 0, 1);
 			}
@@ -1601,9 +1662,9 @@ void my_ecrobot_bt_data_logger(S8 data1, S8 data2)
 	*(( S8 *)(&data_log_buffer[5]))  = (S8)data2;
 	*((U16 *)(&data_log_buffer[6]))  = (U16)ecrobot_get_battery_voltage();
 	*((S32 *)(&data_log_buffer[8]))  = (S32)nxt_motor_get_count(TAIL_MOTOR);
-	*((S32 *)(&data_log_buffer[12])) = (S32)nxt_motor_get_count(RIGHT_MOTOR);
-	*((S32 *)(&data_log_buffer[16])) = (S32)nxt_motor_get_count(LEFT_MOTOR);
-	*((S16 *)(&data_log_buffer[20])) = (S16)ecrobot_get_gyro_sensor(GYRO_SENSOR);
+	*((S32 *)(&data_log_buffer[12])) = (S32)g_Actuator.white;
+	*((S32 *)(&data_log_buffer[16])) = (S32)g_Actuator.black;
+	*((S16 *)(&data_log_buffer[20])) = (S16)g_Actuator.target_gray;//ecrobot_get_gyro_sensor(GYRO_SENSOR);
 	//*((S16 *)(&data_log_buffer[22])) = (S16)ecrobot_get_sonar_sensor(SONAR_SENSOR);
 	*((S16 *)(&data_log_buffer[22])) = (S16)ecrobot_get_light_sensor(LIGHT_SENSOR);
 	//*((S16 *)(&data_log_buffer[26])) = (S16)ecrobot_get_touch_sensor(TOUCH_SENSOR);
