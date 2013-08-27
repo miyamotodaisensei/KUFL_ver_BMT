@@ -71,8 +71,8 @@ typedef enum EvtType
 	PIVOT_TURN_END = 12,
 	STRAIGHT = 13,
 	CURB = 14,
-	MOUSE_CHANGE = 15,
-	RETURN_MOUSE = 7
+	H_MOUSE_CHANGE = 15,
+	L_MOUSE_CHANGE = 7
 }EvtType_e;
 
 /*
