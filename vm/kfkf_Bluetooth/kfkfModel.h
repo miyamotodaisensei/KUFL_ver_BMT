@@ -138,6 +138,7 @@ typedef struct tag_Controller
 	U8 bottle_right_length;
 	U8 bottle_judge;
 	*/
+	U8 start_flag;
 	U8 curb_flag;
 	U8 curb_judge;
 	U8 gray_flag;
