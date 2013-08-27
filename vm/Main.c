@@ -744,7 +744,15 @@ TASK(TaskActuator)
 	/*	しっぽの計算			*/
 	/*--------------------------*/
 	g_Actuator.tail_pre_dif = g_Actuator.tail_dif;
-	g_Actuator.tail_dif = g_Actuator.target_tail - g_Sensor.count_tail;
+	g_Actuator.tail_dif = (S16)g_Actuator.target_tail - g_Sensor.count_tail;
+
+	if((S32)g_Actuator.TP_gain * (S32)g_Actuator.tail_dif > 100) {
+		g_Actuator.TP_gain = 100 / g_Actuator.tail_dif;
+	}
+
+	else if((S32)g_Actuator.TP_gain * (S32)g_Actuator.tail_dif < -100) {
+		g_Actuator.TP_gain = -100 / g_Actuator.tail_dif;
+	}
 
 	//g_pwm_T = (S8)( g_Actuator.TP_gain * g_Actuator.tail_dif + g_Actuator.TD_gain * (g_Actuator.tail_pre_dif - g_Actuator.tail_dif) );
 	g_pwm_T = (S8)( g_Actuator.TP_gain * g_Actuator.tail_dif );
@@ -971,7 +979,7 @@ void InitNXT()
 	g_Actuator.I_gain = 0.0;
 	g_Actuator.D_gain = 0.0;
 
-	g_Actuator.TP_gain = 0.8;
+	g_Actuator.TP_gain = 0.91;
 	g_Actuator.TD_gain = 1.0;
 
 	g_Actuator.color_threshold = g_Actuator.target_gray;
