@@ -629,7 +629,8 @@ TASK(TaskSensor)
 */
 TASK(TaskActuator)
 {
-
+	float tail_forward = 0.0;
+	float tail_turn = 0.0;
 	/*--------------------------*/
 	/*	PWMの初期化				*/
 	/*--------------------------*/
@@ -694,7 +695,7 @@ TASK(TaskActuator)
 			&g_pwm_L,
 			&g_pwm_R
 		);
-}
+	}
 	else if( g_Actuator.StandMode == 3 )
 	{
 
@@ -709,8 +710,31 @@ TASK(TaskActuator)
 			&g_pwm_L,
 			&g_pwm_R
 		);*/
+
+		tail_forward = (float)g_Actuator.forward * 0.625F;
+		tail_turn = (float)g_Actuator.turn * 0.275F;
+
+		g_pwm_L = (int)(tail_forward + tail_turn);
+		g_pwm_R = (int)(tail_forward - tail_turn);
+
+		if (g_pwm_L > 100) {
+			g_pwm_L = 100;
+		}
+		else if(g_pwm_L < -100) {
+			g_pwm_L = -100;
+		}
+
+		if(g_pwm_R > 100) {
+			g_pwm_R = 100;
+		}
+		else if(g_pwm_R < -100) {
+			g_pwm_R = -100;
+		}
+		
+		/*	
 		g_pwm_L = (g_Actuator.forward + g_Actuator.turn)/2 ;
 		g_pwm_R = (g_Actuator.forward - g_Actuator.turn)/2 ;
+		*/
 
 		/*if(abs(g_pwm_L) > 100)
 		{
@@ -773,7 +797,6 @@ TASK(TaskActuator)
 	nxt_motor_set_speed( TAIL_MOTOR, g_pwm_T, 1 );
 	nxt_motor_set_speed( LEFT_MOTOR, g_pwm_L, 1 );
 	nxt_motor_set_speed( RIGHT_MOTOR, g_pwm_R, 1 );
-
 
 	/*--------------------------*/
 	/*	タスクの終了			*/
@@ -976,8 +999,8 @@ void InitNXT()
 	g_Actuator.gray_offset = 10000;
 	g_Actuator.color_threshold = 660;
 	g_Actuator.P_gain = 1.0;
-	g_Actuator.I_gain = 0.0;
-	g_Actuator.D_gain = 0.0;
+	g_Actuator.I_gain = 2.0;
+	g_Actuator.D_gain = 20.0;
 
 	g_Actuator.TP_gain = 0.91;
 	g_Actuator.TD_gain = 1.0;
