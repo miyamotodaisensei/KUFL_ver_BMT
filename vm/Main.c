@@ -1282,7 +1282,7 @@ void EventSensor(){
 	}
 
 	if(g_Controller.gray_flag == 0){
-		if( g_Sensor.light < g_Actuator.mouse_white + 5 && g_Sensor.light > g_Actuator.mouse_white - 20 
+		if( g_Sensor.light < g_Actuator.mouse_white && g_Sensor.light > g_Actuator.mouse_white - 20 
 			&& g_Controller.dif_Light > g_Actuator.target_gray - g_Actuator.mouse_white)
 		{
 			setEvent(H_MOUSE_CHANGE);
