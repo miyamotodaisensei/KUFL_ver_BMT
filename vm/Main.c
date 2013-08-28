@@ -238,6 +238,8 @@ TASK(TaskMain)
 			if(g_CalibCnt >= 100)
 			{
 				g_Actuator.gyro_offset = (U16)(g_CalibGyroSum / g_CalibCnt);
+				g_Actuator.target_gray = (U16)(g_CalibLightSum / g_CalibCnt);
+				g_Actuator.target_gray_base = g_Actuator.target_gray;
 				g_CalibFlag = 0;
 				g_CalibGyroSum = 0;
 				g_CalibLightSum = 0;
@@ -421,7 +423,6 @@ TASK(TaskMain)
 */
 #define LIGHT_BUFFER_LENGTH_MAX 250
 #define ROTATE_E 166
-#define ab 2
 
 /*==================================================*/
 /*	変数											*/
@@ -442,6 +443,8 @@ TASK(TaskSensor)
 	U16 max_Light=0;
 	U16 min_Light=0;
 	U16 light_dif=0;
+	U16 countmin=0;
+	U16 countmax=0;
 	U16 countB=0;
 	U16 countW=0;
 	U8  DCflag=0;
@@ -463,7 +466,7 @@ TASK(TaskSensor)
 		DCflag=1;
 	}
 
-	min_Light = 1000;
+	min_Light = 0;
 	max_Light = 0;
 	
 	light_dif = g_Actuator.black - g_Actuator.white;
@@ -486,16 +489,27 @@ TASK(TaskSensor)
 				countW++;
 			}
 		}
-		if(min_Light > g_LightBuffer[i]){
-			min_Light = g_LightBuffer[i];
+		if(g_Actuator.mouse_white > g_LightBuffer[i]){
+			min_Light += g_LightBuffer[i];
+			countmin++;
 		}
-		if(max_Light < g_LightBuffer[i]){
-			max_Light = g_LightBuffer[i];
+		if(DC < g_LightBuffer[i]){
+			max_Light += g_LightBuffer[i];
+			countmax++;
 		}
 	}
 	
 	g_Sensor.light_ave = (U16)(g_LightAve / LIGHT_BUFFER_LENGTH_MAX);
 	
+	min_Light /= countmin;
+	max_Light /= countmax;
+	if(min_Light == 0){
+		min_Light = g_Actuator.black;
+	}
+	if(max_Light == 0){
+		max_Light = DC;
+	}
+
 	if(DCflag == 1){
 		g_Actuator.black /= countB;
 		g_Actuator.white /= countW;
@@ -503,21 +517,23 @@ TASK(TaskSensor)
 	}
 
 	if(DC >= g_Actuator.black){
-		g_Actuator.black = g_Sensor.realblack; // - (g_Sensor.realblack - g_Sensor.realwhite) / ab;
+		g_Actuator.black = g_Sensor.realblack;
 	}
 	if(DC < g_Actuator.white){
-		g_Actuator.white = g_Sensor.realwhite; //+ (g_Sensor.realblack - g_Sensor.realwhite) / ab;
+		g_Actuator.white = g_Sensor.realwhite;
 	}
 	if(g_Actuator.black == 0){
-		g_Actuator.black = g_Sensor.realblack;// + (g_Sensor.realblack - g_Sensor.realwhite) * 2  / 5;
+		g_Actuator.black = g_Sensor.realblack;
 	}	
 	if(g_Actuator.white == 0){
-		g_Actuator.white = g_Sensor.realwhite;// + (g_Sensor.realblack - g_Sensor.realwhite) * 2  / 5;
+		g_Actuator.white = g_Sensor.realwhite;
 	}
 	/*else if((g_Sensor.realwhite - (g_Sensor.realblack - g_Sensor.realwhite) * 2 / 5) > g_Actuator.white){
 		g_Actuator.white = g_Sensor.realwhite - (g_Sensor.realblack - g_Sensor.realwhite) * 2 / 5;
 	}*/
-	g_Actuator.target_gray = (g_Actuator.black * 2 / 5 + g_Actuator.white * 3 /5);
+	if(g_Controller.start_flag == 1){
+		g_Actuator.target_gray = (g_Actuator.black * 2 / 5 + g_Actuator.white * 3 /5);
+	}
 	g_Controller.dif_Light = max_Light - min_Light;
 	//--------------------------------
 	//	Gyro Data
@@ -1041,6 +1057,7 @@ void InitNXT()
 	g_Controller.bottle_right_length = 0;
 	g_Controller.bottle_judge = 0;
 	*/
+	g_Controller.start_flag = 0;
 	g_Controller.curb_flag = 0;
 	g_Controller.curb_judge = 0;
 	g_Controller.gray_flag = 0;
@@ -1201,6 +1218,7 @@ void EventSensor(){
 	{
 		setEvent(BT_START);
 		g_Controller.BTstart_status = 1;
+		g_Controller.start_flag = 1;
 	}
 	else if( g_Sensor.BTstart == 0 && g_Controller.BTstart_status == 1 )
 	{
@@ -1264,18 +1282,20 @@ void EventSensor(){
 	}
 
 	if(g_Controller.gray_flag == 0){
-		if( g_Controller.dif_Light < g_Actuator.target_gray - g_Actuator.mouse_white )
+		if( g_Sensor.light < g_Actuator.mouse_white + 5 && g_Sensor.light > g_Actuator.mouse_white - 20 
+			&& g_Controller.dif_Light > g_Actuator.target_gray - g_Actuator.mouse_white)
 		{
-			setEvent(MOUSE_CHANGE);
-			g_Controller.gray_flag = 1;
+			setEvent(H_MOUSE_CHANGE);
+			//g_Controller.gray_flag = 1;
 		}
 	}
 
-	if(g_Controller.gray_flag == 1){
-		if( g_Controller.dif_Light > (g_Actuator.target_gray - g_Actuator.mouse_white))
+	if(g_Controller.gray_flag == 0){
+		if( g_Controller.dif_Light > g_Actuator.target_gray - g_Actuator.mouse_white && g_Sensor.light < g_Actuator.mouse_white + 20
+			&& g_Sensor.light > g_Actuator.mouse_white - 10)
 		{
-			setEvent(RETURN_MOUSE);
-			g_Controller.gray_flag = 0;
+			setEvent(L_MOUSE_CHANGE);
+			//g_Controller.gray_flag = 1;
 		}
 	}
 	setNextState();
@@ -1355,7 +1375,7 @@ void setController(void)
 
 			g_Actuator.TraceMode = 1;
 			g_Actuator.StandMode = 1;
-			g_Controller.gray_flag = 1;
+			g_Controller.gray_flag = 0;
 			break;
 
 		//change the gray threshold
@@ -1368,7 +1388,7 @@ void setController(void)
 			g_Actuator.TraceMode = 2;
 			g_Actuator.StandMode = 1;
 
-			g_Controller.gray_flag = 0;
+			g_Controller.gray_flag = 1;
 			break;
 
 		//run with no linetrace without balance
