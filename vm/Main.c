@@ -373,8 +373,8 @@ TASK(TaskMain)
 			if(g_CalibCnt >= 100)
 			{
 				g_Actuator.mouse = (U16)(g_CalibLightSum / g_CalibCnt);
-				//g_Actuator.mouse_white = g_Actuator.mouse * 2 / 5 + g_Actuator.white * 3 / 5;
-				g_Actuator.mouse_white = (g_Actuator.mouse + g_Actuator.white) / 2;
+				//g_Actuator.mouse_white = g_Actuator.mouse * 3 / 5 + g_Actuator.white * 2 / 5;	//布用
+				g_Actuator.mouse_white = (g_Actuator.mouse + g_Actuator.white) / 2;	//紙用
 				g_CalibFlag = 0;
 				g_CalibLightSum = 0;
 				g_CalibCnt = 0;
@@ -509,7 +509,7 @@ TASK(TaskSensor)
 	max_Light /= countmax;
 	if(min_Light == 0){
 		min_Light = DC;
-		
+
 	}
 	if(max_Light == 0){
 		max_Light = DC;
@@ -1265,21 +1265,30 @@ void EventSensor(){
 	}
 
 	if(g_Controller.gray_flag == 0){
-		if( g_Sensor.light < g_Actuator.mouse_white && g_Sensor.light > g_Actuator.mouse_white - 20 
-			&& g_Controller.dif_Light > g_Actuator.target_gray - g_Actuator.mouse_white)
-		{
-			setEvent(H_MOUSE_CHANGE);
-			//g_Controller.gray_flag = 1;
+		if(g_Controller.dif_Light > g_Actuator.target_gray - g_Actuator.mouse_white){
+			if(g_Actuator.forward >= 80){
+				if( g_Sensor.light < g_Actuator.mouse_white && g_Sensor.light > g_Actuator.mouse_white - 20 )
+				{
+					setEvent(H_MOUSE_CHANGE);
+				}
+			}
+			else if(g_Actuator.forward >= 50){
+				if( g_Sensor.light < g_Actuator.mouse_white + 10 && g_Sensor.light > g_Actuator.mouse_white - 20 )
+				{
+					setEvent(H_MOUSE_CHANGE);
+				}
+			}
+			else if(g_Actuator.forward >= 30){
+				if( g_Sensor.light < g_Actuator.mouse_white + 20 && g_Sensor.light > g_Actuator.mouse_white - 20 )
+				{
+					setEvent(H_MOUSE_CHANGE);
+				}
+			}
 		}
 	}
 
-	if(g_Controller.gray_flag == 0){
-		if( g_Controller.dif_Light > g_Actuator.target_gray - g_Actuator.mouse_white && g_Sensor.light < g_Actuator.mouse_white + 10
-			&& g_Sensor.light > g_Actuator.mouse_white - 20)
-		{
-			setEvent(L_MOUSE_CHANGE);
-			//g_Controller.gray_flag = 1;
-		}
+	if(g_Sensor.count_left < 10 && g_Sensor.count_right < 10){
+		setEvent(L_MOUSE_CHANGE);
 	}
 	setNextState();
 
@@ -1692,7 +1701,7 @@ void my_ecrobot_bt_data_logger(S8 data1, S8 data2)
 	*((S32 *)(&data_log_buffer[8]))  = (S32)nxt_motor_get_count(TAIL_MOTOR);
 	*((S32 *)(&data_log_buffer[12])) = (S32)g_Actuator.white;
 	*((S32 *)(&data_log_buffer[16])) = (S32)g_Actuator.black;
-	*((S16 *)(&data_log_buffer[20])) = (S16)g_Actuator.target_gray;//ecrobot_get_gyro_sensor(GYRO_SENSOR);
+	*((S16 *)(&data_log_buffer[20])) = (S16)ecrobot_get_gyro_sensor(GYRO_SENSOR);
 	//*((S16 *)(&data_log_buffer[22])) = (S16)ecrobot_get_sonar_sensor(SONAR_SENSOR);
 	*((S16 *)(&data_log_buffer[22])) = (S16)ecrobot_get_light_sensor(LIGHT_SENSOR);
 	//*((S16 *)(&data_log_buffer[26])) = (S16)ecrobot_get_touch_sensor(TOUCH_SENSOR);
