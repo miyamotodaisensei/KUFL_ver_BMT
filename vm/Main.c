@@ -1265,13 +1265,6 @@ void EventSensor(){
 	}
 
 	if(g_Controller.gray_flag == 0){
-<<<<<<< HEAD
-		if( g_Sensor.light < g_Actuator.mouse_white + 5 && g_Sensor.light > g_Actuator.mouse_white - 20 
-			&& g_Controller.dif_Light > g_Actuator.target_gray - g_Actuator.mouse_white)
-		{
-			setEvent(H_MOUSE_CHANGE);
-			//g_Controller.gray_flag = 1;
-=======
 		if(g_Controller.dif_Light > g_Actuator.target_gray - g_Actuator.mouse_white){
 			if(g_Actuator.forward >= 80){
 				if( g_Sensor.light < g_Actuator.mouse_white && g_Sensor.light > g_Actuator.mouse_white - 20 )
@@ -1291,7 +1284,6 @@ void EventSensor(){
 					setEvent(H_MOUSE_CHANGE);
 				}
 			}
->>>>>>> 1fa2e05a9b146236e21c0e18530b78f3f0e16b5a
 		}
 	}
 
