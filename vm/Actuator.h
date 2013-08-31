@@ -18,6 +18,7 @@ typedef struct tag_Actuator
 
 	U32 black;
 	U32 white;
+	U16 mouse;
 	U16 mouse_white;
 	U16 target_gray;
 	U16 target_gray_base;
