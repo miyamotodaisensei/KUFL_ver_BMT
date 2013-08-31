@@ -1645,6 +1645,24 @@ void setController(void)
 			break;
 
 		case SEARCH_BOTTLE_END:
+			if( g_Controller.pivot_turn_flag == 0 )
+			{
+				g_Actuator.forward = 0;
+				g_Actuator.TraceMode = 0;
+
+				if( state.value0 >= 0 )
+				{
+					g_Actuator.turn = abs( state.value1 );
+				}
+				else
+				{
+					g_Actuator.turn = -1 * abs( state.value1 );
+				}
+
+				g_Controller.start_pivot_turn_encoder_R = g_Sensor.count_right;
+				g_Controller.target_pivot_turn_angle_R = calcAngle2Encoder(state.value0);
+				g_Controller.pivot_turn_flag = 1;
+			}
 			/*
 			g_Controller.bottle_right_flag = 0;
 			g_Controller.bottle_right_length = 0;
