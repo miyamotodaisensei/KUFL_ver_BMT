@@ -373,8 +373,8 @@ TASK(TaskMain)
 			if(g_CalibCnt >= 100)
 			{
 				g_Actuator.mouse = (U16)(g_CalibLightSum / g_CalibCnt);
-				//g_Actuator.mouse_white = g_Actuator.mouse * 3 / 5 + g_Actuator.white * 2 / 5;	//布用
-				g_Actuator.mouse_white = (g_Actuator.mouse + g_Actuator.white) / 2;	//紙用
+				g_Actuator.mouse_white = g_Actuator.mouse * 3 / 5 + g_Actuator.white * 2 / 5;	//布用
+				//g_Actuator.mouse_white = (g_Actuator.mouse + g_Actuator.white) / 2;	//紙用
 				g_CalibFlag = 0;
 				g_CalibLightSum = 0;
 				g_CalibCnt = 0;
@@ -650,6 +650,8 @@ TASK(TaskSensor)
 */
 TASK(TaskActuator)
 {
+	float tail_forward = 0.0;
+	float tail_turn = 0.0;
 
 	/*--------------------------*/
 	/*	PWMの初期化				*/
