@@ -730,8 +730,31 @@ TASK(TaskActuator)
 			&g_pwm_L,
 			&g_pwm_R
 		);*/
+		
+		tail_forward = (float)g_Actuator.forward * 0.625F;
+		tail_turn = (float)g_Actuator.turn * 0.275F;
+
+		g_pwm_L = (int)(tail_forward + tail_turn);
+		g_pwm_R = (int)(tail_forward - tail_turn);
+
+		if (g_pwm_L > 100) {
+			g_pwm_L = 100;
+		}
+		else if(g_pwm_L < -100) {
+			g_pwm_L = -100;
+		}
+
+		if(g_pwm_R > 100) {
+			g_pwm_R = 100;
+		}
+		else if(g_pwm_R < -100) {
+			g_pwm_R = -100;
+		}
+
+		/*
 		g_pwm_L = (g_Actuator.forward + g_Actuator.turn)/2 ;
 		g_pwm_R = (g_Actuator.forward - g_Actuator.turn)/2 ;
+		*/
 
 		/*if(abs(g_pwm_L) > 100)
 		{
