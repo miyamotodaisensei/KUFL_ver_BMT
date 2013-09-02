@@ -94,9 +94,9 @@ float free_right;
 void ecrobot_device_initialize()
 {
 	/* 初期化:Motor */
-	nxt_motor_set_speed( LEFT_MOTOR, 0, 1);
-	nxt_motor_set_speed( RIGHT_MOTOR, 0, 1);
-	nxt_motor_set_speed( TAIL_MOTOR, -15, 1);
+	nxt_motor_set_speed( LEFT_MOTOR, 0, 0);
+	nxt_motor_set_speed( RIGHT_MOTOR, 0, 0);
+	nxt_motor_set_speed( TAIL_MOTOR, 0, 0);
 	nxt_motor_set_count( RIGHT_MOTOR, 0);
 	nxt_motor_set_count( LEFT_MOTOR, 0);
 	nxt_motor_set_count( TAIL_MOTOR, 0);
@@ -373,9 +373,9 @@ TASK(TaskMain)
 			if(g_CalibCnt >= 100)
 			{
 				g_Actuator.mouse = (U16)(g_CalibLightSum / g_CalibCnt);
-				// g_Actuator.mouse_white = g_Actuator.mouse * 2 / 5 + g_Actuator.white * 3 / 5;	// 本番布用
-				//g_Actuator.mouse_white = g_Actuator.mouse * 3 / 5 + g_Actuator.white * 2 / 5;	//布用
-				g_Actuator.mouse_white = (g_Actuator.mouse + g_Actuator.white) / 2;	//紙用
+				//g_Actuator.mouse_white = g_Actuator.mouse * 2 / 5 + g_Actuator.white * 3 / 5;	//本番用
+				g_Actuator.mouse_white = g_Actuator.mouse * 3 / 5 + g_Actuator.white * 2 / 5;	//10F布用
+				//g_Actuator.mouse_white = (g_Actuator.mouse + g_Actuator.white) / 2;	//紙用
 				g_CalibFlag = 0;
 				g_CalibLightSum = 0;
 				g_CalibCnt = 0;
@@ -652,6 +652,9 @@ TASK(TaskSensor)
 TASK(TaskActuator)
 {
 
+	float tail_forward = 0.0; 
+	float tail_turn = 0.0;
+
 	/*--------------------------*/
 	/*	PWMの初期化				*/
 	/*--------------------------*/
@@ -731,9 +734,26 @@ TASK(TaskActuator)
 			&g_pwm_L,
 			&g_pwm_R
 		);*/
+		tail_forward = (float)g_Actuator.forward * 0.625F;
+		tail_turn = (float)g_Actuator.turn * 0.275F;
+		g_pwm_L = (int)(tail_forward + tail_turn);
+		g_pwm_R = (int)(tail_forward - tail_turn);
+		if (g_pwm_L > 100) {
+			g_pwm_L = 100;
+		}
+		else if(g_pwm_L < -100) {
+			g_pwm_L = -100;
+		}
+		if(g_pwm_R > 100) {
+			g_pwm_R = 100;
+		}
+		else if(g_pwm_R < -100) {
+			g_pwm_R = -100;
+		}
+		/*
 		g_pwm_L = (g_Actuator.forward + g_Actuator.turn)/2 ;
 		g_pwm_R = (g_Actuator.forward - g_Actuator.turn)/2 ;
-
+		*/
 		/*if(abs(g_pwm_L) > 100)
 		{
 			g_pwm_R = 100 * g_pwm_R / abs(g_pwm_L);
