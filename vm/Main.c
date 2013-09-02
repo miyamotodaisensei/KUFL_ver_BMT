@@ -1308,8 +1308,8 @@ void EventSensor(){
 		}
 	}
 
-	if(g_Sensor.count_left < 10 && g_Sensor.count_right < 10){
-		setEvent(L_MOUSE_CHANGE);
+	if(g_Sensor.distance == 255) {
+   		setEvent(L_MOUSE_CHANGE);
 	}
 	setNextState();
 
