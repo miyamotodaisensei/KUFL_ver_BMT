@@ -373,7 +373,8 @@ TASK(TaskMain)
 			if(g_CalibCnt >= 100)
 			{
 				g_Actuator.mouse = (U16)(g_CalibLightSum / g_CalibCnt);
-				g_Actuator.mouse_white = g_Actuator.mouse * 3 / 5 + g_Actuator.white * 2 / 5;	//布用
+				g_Actuator.mouse_white = g_Actuator.mouse * 2 / 5 + g_Actuator.white * 3 / 5;
+				//g_Actuator.mouse_white = g_Actuator.mouse * 3 / 5 + g_Actuator.white * 2 / 5;	//布用
 				//g_Actuator.mouse_white = (g_Actuator.mouse + g_Actuator.white) / 2;	//紙用
 				g_CalibFlag = 0;
 				g_CalibLightSum = 0;
@@ -426,7 +427,7 @@ TASK(TaskMain)
 ===============================================================================================
 */
 #define LIGHT_BUFFER_LENGTH_MAX 250
-#define ROTATE_E 166
+#define ROTATE_E 18
 
 /*==================================================*/
 /*	変数											*/
@@ -474,7 +475,7 @@ TASK(TaskSensor)
 	max_Light = 0;
 	
 	light_dif = g_Actuator.black - g_Actuator.white;
-	if(DCflag == 1){
+	if(DCflag == 1 && g_Actuator.StandMode != 3){
 		g_Actuator.black = 0;
 		g_Actuator.white = 0;
 	}
@@ -515,7 +516,7 @@ TASK(TaskSensor)
 		max_Light = DC;
 	}
 
-	if(DCflag == 1){
+	if(DCflag == 1 && g_Actuator.StandMode != 3){
 		g_Actuator.black /= countB;
 		g_Actuator.white /= countW;
 		DCflag = 0;
