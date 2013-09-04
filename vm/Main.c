@@ -119,9 +119,9 @@ void ecrobot_device_initialize()
 void ecrobot_device_terminate()
 {
 	/* 終了処理: Motor */
-	nxt_motor_set_speed( LEFT_MOTOR, 0, 0);
-	nxt_motor_set_speed( RIGHT_MOTOR, 0, 0);
-	nxt_motor_set_speed( TAIL_MOTOR, 0, 0);
+	nxt_motor_set_speed( LEFT_MOTOR, 0, 1);
+	nxt_motor_set_speed( RIGHT_MOTOR, 0, 1);
+	nxt_motor_set_speed( TAIL_MOTOR, -15, 1);
 	nxt_motor_set_count( RIGHT_MOTOR, 0);
 	nxt_motor_set_count( LEFT_MOTOR, 0);
 	nxt_motor_set_count( TAIL_MOTOR, 0);
@@ -1294,13 +1294,13 @@ void EventSensor(){
 				}
 			}
 			else if(g_Actuator.forward >= 50){
-				if( g_Sensor.light < g_Actuator.mouse_white + 10 && g_Sensor.light > g_Actuator.mouse_white - 20 )
+				if( g_Sensor.light < g_Actuator.mouse_white + 8 && g_Sensor.light > g_Actuator.mouse_white - 20 )
 				{
 					setEvent(H_MOUSE_CHANGE);
 				}
 			}
 			else if(g_Actuator.forward >= 30){
-				if( g_Sensor.light < g_Actuator.mouse_white + 20 && g_Sensor.light > g_Actuator.mouse_white - 20 )
+				if( g_Sensor.light < g_Actuator.mouse_white + 15 && g_Sensor.light > g_Actuator.mouse_white - 20 )
 				{
 					setEvent(H_MOUSE_CHANGE);
 				}
@@ -1581,6 +1581,7 @@ void setController(void)
 			//g_Actuator.tail_run_speed = state.value1;
 			g_Actuator.forward = state.value1;
 			g_Actuator.TP_gain = (F32)state.value2 / 100;
+			g_Controller.gray_flag = 0;
 			break;
 
 		//circling
