@@ -1019,8 +1019,8 @@ void InitNXT()
 	g_Actuator.gray_offset = 10000;
 	g_Actuator.color_threshold = 660;
 	g_Actuator.P_gain = 1.0;
-	g_Actuator.I_gain = 0.0;
-	g_Actuator.D_gain = 0.0;
+	g_Actuator.I_gain = 2.0;
+	g_Actuator.D_gain = 20.0;
 
 	g_Actuator.TP_gain = 0.91;
 	g_Actuator.TD_gain = 1.0;
@@ -1279,8 +1279,7 @@ void EventSensor(){
 	}
 	else {
 		if(g_Controller.curb_flag == 1) {
-			setEvent(STRAIGHT);
-			//ecrobot_sound_tone(1000, 50, 30);
+			setEvent(STRAIGHT);			//ecrobot_sound_tone(1000, 50, 30);
 			g_Controller.curb_flag = 0;
 		}
 	}
@@ -1294,13 +1293,13 @@ void EventSensor(){
 				}
 			}
 			else if(g_Actuator.forward >= 50){
-				if( g_Sensor.light < g_Actuator.mouse_white + 8 && g_Sensor.light > g_Actuator.mouse_white - 20 )
+				if( g_Sensor.light < g_Actuator.mouse_white + 5 && g_Sensor.light > g_Actuator.mouse_white - 20 )
 				{
 					setEvent(H_MOUSE_CHANGE);
 				}
 			}
 			else if(g_Actuator.forward >= 30){
-				if( g_Sensor.light < g_Actuator.mouse_white + 15 && g_Sensor.light > g_Actuator.mouse_white - 20 )
+				if( g_Sensor.light < g_Actuator.mouse_white + 10 && g_Sensor.light > g_Actuator.mouse_white - 20 )
 				{
 					setEvent(H_MOUSE_CHANGE);
 				}
@@ -1308,8 +1307,8 @@ void EventSensor(){
 		}
 	}
 
-	if(g_Sensor.distance == 255) {
-   		setEvent(L_MOUSE_CHANGE);
+	if(g_Sensor.distance == 255){
+		setEvent(SONAR_255);
 	}
 	setNextState();
 

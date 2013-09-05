@@ -72,7 +72,7 @@ typedef enum EvtType
 	STRAIGHT = 13,
 	CURB = 14,
 	H_MOUSE_CHANGE = 15,
-	L_MOUSE_CHANGE = 7
+	SONAR_255 = 7
 }EvtType_e;
 
 /*
