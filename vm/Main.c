@@ -34,6 +34,8 @@ typedef enum _MainTaskState
 	TARGETCALIB,
 	WHITECALIB,
 	BLACKCALIB,
+	TAILWHITECALIB,
+	TAILBLACKCALIB,
 	MOUSECALIB,
 	ACTION
 }MainTaskState_e;
@@ -119,9 +121,9 @@ void ecrobot_device_initialize()
 void ecrobot_device_terminate()
 {
 	/* 終了処理: Motor */
-	nxt_motor_set_speed( LEFT_MOTOR, 0, 1);
-	nxt_motor_set_speed( RIGHT_MOTOR, 0, 1);
-	nxt_motor_set_speed( TAIL_MOTOR, -15, 1);
+	nxt_motor_set_speed( LEFT_MOTOR, 0, 0);
+	nxt_motor_set_speed( RIGHT_MOTOR, 0, 0);
+	nxt_motor_set_speed( TAIL_MOTOR, 0, 0);
 	nxt_motor_set_count( RIGHT_MOTOR, 0);
 	nxt_motor_set_count( LEFT_MOTOR, 0);
 	nxt_motor_set_count( TAIL_MOTOR, 0);
@@ -223,6 +225,8 @@ TASK(TaskMain)
 		/*	キャリブレーション(ライン境目&ジャイロ)		*/
 		/*----------------------------------------------*/
 		case TARGETCALIB:
+		g_Actuator.target_tail = 110;
+		g_Actuator.TP_gain = 0.91;
 			if( g_Sensor.touch == 1 )
 			{
 				ecrobot_sound_tone(440, 50, 30);
@@ -357,7 +361,7 @@ TASK(TaskMain)
 		/*----------------------------------------------*/
 		/*	キャリブレーション(灰色)					*/
 		/*----------------------------------------------*/
-			case MOUSECALIB:
+		case MOUSECALIB:
 			if( g_Sensor.touch == 1 )
 			{
 				ecrobot_sound_tone(440, 50, 30);
@@ -397,10 +401,93 @@ TASK(TaskMain)
 		        ecrobot_sound_tone(880, 50, 30);
 
 		        /* 状態遷移: TARGETCALIB */
-				g_MTState = TARGETCALIB;
+				g_MTState = TAILWHITECALIB;
 			}
 			break;
 
+		case TAILWHITECALIB:
+			g_Actuator.target_tail = 60;
+			g_Actuator.TP_gain = 1.67;
+			if( g_Sensor.touch == 1 )
+			{
+				ecrobot_sound_tone(440, 50, 30);
+				g_CalibFlag = 1;
+			}
+
+			if( g_CalibFlag == 1 )
+			{
+				g_CalibCnt++;
+				g_CalibLightSum += g_Sensor.light;
+			}
+
+			if(g_CalibCnt >= 100)
+			{
+				g_Actuator.tail_white = (U16)(g_CalibLightSum / g_CalibCnt);
+				g_CalibFlag = 0;
+				g_CalibLightSum = 0;
+				g_CalibCnt = 0;
+
+		        display_clear(0);
+				display_goto_xy(0, 0);
+				display_string("Prep:TRUE");
+		        display_goto_xy(1, 1);
+		        display_string("BT:TRUE");
+		        display_goto_xy(1, 2);
+		        display_string("CLBWhite:TRUE");
+		        display_goto_xy(1, 3);
+		        display_string("CLBBlack:TRUE");
+		        display_goto_xy(1, 4);
+		        display_string("CLBMouse:TRUE");
+		        display_goto_xy(1, 5);
+		        display_string("CLBGyro:FALSE");
+		        display_update();
+		        ecrobot_sound_tone(880, 50, 30);
+
+		        /* 状態遷移: TARGETCALIB */
+				g_MTState = TAILBLACKCALIB;
+			}
+			break;
+
+		case TAILBLACKCALIB:
+			if( g_Sensor.touch == 1 )
+			{
+				ecrobot_sound_tone(440, 50, 30);
+				g_CalibFlag = 1;
+			}
+
+			if( g_CalibFlag == 1 )
+			{
+				g_CalibCnt++;
+				g_CalibLightSum += g_Sensor.light;
+			}
+
+			if(g_CalibCnt >= 100)
+			{
+				g_Actuator.tail_black = (U16)(g_CalibLightSum / g_CalibCnt);
+				g_CalibFlag = 0;
+				g_CalibLightSum = 0;
+				g_CalibCnt = 0;
+
+		        display_clear(0);
+				display_goto_xy(0, 0);
+				display_string("Prep:TRUE");
+		        display_goto_xy(1, 1);
+		        display_string("BT:TRUE");
+		        display_goto_xy(1, 2);
+		        display_string("CLBWhite:TRUE");
+		        display_goto_xy(1, 3);
+		        display_string("CLBBlack:TRUE");
+		        display_goto_xy(1, 4);
+		        display_string("CLBMouse:TRUE");
+		        display_goto_xy(1, 5);
+		        display_string("CLBGyro:FALSE");
+		        display_update();
+		        ecrobot_sound_tone(880, 50, 30);
+
+		        /* 状態遷移: TARGETCALIB */
+				g_MTState = TARGETCALIB;
+			}
+			break;
 		/*----------------------------------------------*/
 		/*	kfkfモデル動作								*/
 		/*----------------------------------------------*/
@@ -685,6 +772,16 @@ TASK(TaskActuator)
 		g_Actuator.turn = g_Actuator.P_gain * g_Actuator.dif
 				+ g_Actuator.I_gain * g_Actuator.integral
 				+ g_Actuator.D_gain * g_Actuator.differential;
+		if(g_Actuator.TraceMode == 3){
+			if (ecrobot_get_light_sensor(NXT_PORT_S3) <= (g_Actuator.tail_black + g_Actuator.tail_white) / 2)
+			{
+				g_Actuator.turn = -50;  /* ‰Eù‰ñ–½—ß */
+			}
+			else
+			{
+				g_Actuator.turn = 50; /* ¶ù‰ñ–½—ß */
+			}
+		}
 	}
 
 	/*--------------------------*/
@@ -1004,6 +1101,8 @@ void InitNXT()
 	g_Actuator.turn = 0;
 	g_Actuator.black = 800;
 	g_Actuator.white = 400;
+	g_Actuator.tail_black = 700;
+	g_Actuator.tail_white = 600;
 	g_Actuator.mouse = 620;
 	g_Actuator.mouse_white = 600;
 	g_Actuator.target_gray = 600;
@@ -1286,24 +1385,25 @@ void EventSensor(){
 
 	if(g_Controller.gray_flag == 0){
 		if(g_Controller.dif_Light > g_Actuator.target_gray - g_Actuator.mouse_white){
-			if(g_Actuator.forward >= 80){
+			/*if(g_Actuator.forward >= 80){
 				if( g_Sensor.light < g_Actuator.mouse_white && g_Sensor.light > g_Actuator.mouse_white - 20 )
 				{
 					setEvent(H_MOUSE_CHANGE);
 				}
 			}
 			else if(g_Actuator.forward >= 50){
-				if( g_Sensor.light < g_Actuator.mouse_white + 5 && g_Sensor.light > g_Actuator.mouse_white - 20 )
+				if( g_Sensor.light < g_Actuator.mouse_white + 0 && g_Sensor.light > g_Actuator.mouse_white - 20 )
 				{
 					setEvent(H_MOUSE_CHANGE);
 				}
 			}
 			else if(g_Actuator.forward >= 30){
-				if( g_Sensor.light < g_Actuator.mouse_white + 10 && g_Sensor.light > g_Actuator.mouse_white - 20 )
+				if( g_Sensor.light < g_Actuator.mouse_white + 0 && g_Sensor.light > g_Actuator.mouse_white - 20 )
 				{
 					setEvent(H_MOUSE_CHANGE);
 				}
-			}
+			}*/
+			setEvent(H_MOUSE_CHANGE);
 		}
 	}
 
@@ -1574,13 +1674,13 @@ void setController(void)
 		//@param angle
 		//@param speed
  		case TAIL_LINETRACE:
-			g_Actuator.TraceMode = 1;
+			g_Actuator.TraceMode = 3;
 			g_Actuator.StandMode = 3;
 			g_Actuator.target_tail = state.value0;
 			//g_Actuator.tail_run_speed = state.value1;
 			g_Actuator.forward = state.value1;
 			g_Actuator.TP_gain = (F32)state.value2 / 100;
-			g_Controller.gray_flag = 0;
+			g_Controller.gray_flag = 1;
 			break;
 
 		//circling
