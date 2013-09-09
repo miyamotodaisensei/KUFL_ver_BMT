@@ -400,11 +400,14 @@ TASK(TaskMain)
 		        display_update();
 		        ecrobot_sound_tone(880, 50, 30);
 
-		        /* 状態遷移: TARGETCALIB */
+		        /* 状態遷移: TAILWHITECALIB */
 				g_MTState = TAILWHITECALIB;
 			}
 			break;
 
+		/*----------------------------------------------*/
+		/*	キャリブレーション(しっぽ60白)					*/
+		/*----------------------------------------------*/
 		case TAILWHITECALIB:
 			g_Actuator.target_tail = 60;
 			g_Actuator.TP_gain = 1.67;
@@ -442,12 +445,14 @@ TASK(TaskMain)
 		        display_string("CLBGyro:FALSE");
 		        display_update();
 		        ecrobot_sound_tone(880, 50, 30);
-
-		        /* 状態遷移: TARGETCALIB */
 				g_MTState = TAILBLACKCALIB;
 			}
 			break;
 
+
+		/*----------------------------------------------*/
+		/*	キャリブレーション(しっぽ60黒)					*/
+		/*----------------------------------------------*/
 		case TAILBLACKCALIB:
 			if( g_Sensor.touch == 1 )
 			{
@@ -483,11 +488,10 @@ TASK(TaskMain)
 		        display_string("CLBGyro:FALSE");
 		        display_update();
 		        ecrobot_sound_tone(880, 50, 30);
-
-		        /* 状態遷移: TARGETCALIB */
 				g_MTState = TARGETCALIB;
 			}
 			break;
+
 		/*----------------------------------------------*/
 		/*	kfkfモデル動作								*/
 		/*----------------------------------------------*/
@@ -761,25 +765,28 @@ TASK(TaskActuator)
 		{
 			g_Actuator.dif = g_Sensor.light - g_Actuator.target_gray;
 		}
+		//灰色ライントレース用
 		else if( g_Actuator.TraceMode == 2 )
 		{
 			g_Actuator.dif = g_Sensor.light - g_Actuator.mouse_white;
 		}
 
 		g_Actuator.differential = g_Actuator.dif - g_Actuator.pre_dif;
-		g_Actuator.integral += (g_Actuator.dif + g_Actuator.pre_dif)/2.0 * 0.004;
+		g_Actuator.integral += (g_Actuator.dif + g_Actuator.pre_dif) / 2.0 * 0.004;
 
 		g_Actuator.turn = g_Actuator.P_gain * g_Actuator.dif
 				+ g_Actuator.I_gain * g_Actuator.integral
 				+ g_Actuator.D_gain * g_Actuator.differential;
+		
+		//ONOFF制御
 		if(g_Actuator.TraceMode == 3){
 			if (ecrobot_get_light_sensor(NXT_PORT_S3) <= (g_Actuator.tail_black + g_Actuator.tail_white) / 2)
 			{
-				g_Actuator.turn = -50;  /* ‰Eù‰ñ–½—ß */
+				g_Actuator.turn = -50;
 			}
 			else
 			{
-				g_Actuator.turn = 50; /* ¶ù‰ñ–½—ß */
+				g_Actuator.turn = 50;
 			}
 		}
 	}
@@ -1372,20 +1379,25 @@ void EventSensor(){
 	if(g_Controller.curb_judge == 1) {
 		if(g_Controller.curb_flag == 0) {
 			setEvent(CURB);
-			//ecrobot_sound_tone(440, 50, 60);
 			g_Controller.curb_flag = 1;
 		}
 	}
 	else {
 		if(g_Controller.curb_flag == 1) {
-			setEvent(STRAIGHT);			//ecrobot_sound_tone(1000, 50, 30);
+			setEvent(STRAIGHT);
 			g_Controller.curb_flag = 0;
 		}
 	}
 
 	if(g_Controller.gray_flag == 0){
 		if(g_Controller.dif_Light > g_Actuator.target_gray - g_Actuator.mouse_white){
-			/*if(g_Actuator.forward >= 80){
+			if(g_Actuator.forward >= 110){
+				if( g_Sensor.light < g_Actuator.mouse_white - 10 && g_Sensor.light > g_Actuator.mouse_white - 20 )
+				{
+					setEvent(H_MOUSE_CHANGE);
+				}
+			}
+			if(g_Actuator.forward >= 80){
 				if( g_Sensor.light < g_Actuator.mouse_white && g_Sensor.light > g_Actuator.mouse_white - 20 )
 				{
 					setEvent(H_MOUSE_CHANGE);
@@ -1398,11 +1410,11 @@ void EventSensor(){
 				}
 			}
 			else if(g_Actuator.forward >= 30){
-				if( g_Sensor.light < g_Actuator.mouse_white + 0 && g_Sensor.light > g_Actuator.mouse_white - 20 )
+				if( g_Sensor.light < g_Actuator.mouse_white + 5 && g_Sensor.light > g_Actuator.mouse_white - 20 )
 				{
 					setEvent(H_MOUSE_CHANGE);
 				}
-			}*/
+			}
 			setEvent(H_MOUSE_CHANGE);
 		}
 	}
@@ -1675,12 +1687,13 @@ void setController(void)
 		//@param speed
  		case TAIL_LINETRACE:
 			g_Actuator.TraceMode = 3;
+			//g_Actuator.TraceMode = state.value3;
 			g_Actuator.StandMode = 3;
 			g_Actuator.target_tail = state.value0;
 			//g_Actuator.tail_run_speed = state.value1;
 			g_Actuator.forward = state.value1;
 			g_Actuator.TP_gain = (F32)state.value2 / 100;
-			g_Controller.gray_flag = 1;
+			g_Controller.gray_flag = 0;
 			break;
 
 		//circling
@@ -1770,7 +1783,7 @@ void setController(void)
 			{
 				g_Actuator.forward = 0;
 				g_Actuator.TraceMode = 0;
-
+				g_Actuator.StandMode = 1;
 				if( state.value0 >= 0 )
 				{
 					g_Actuator.turn = abs( state.value1 );
@@ -1779,7 +1792,6 @@ void setController(void)
 				{
 					g_Actuator.turn = -1 * abs( state.value1 );
 				}
-
 				g_Controller.start_pivot_turn_encoder_R = g_Sensor.count_right;
 				g_Controller.target_pivot_turn_angle_R = calcAngle2Encoder(state.value0);
 				g_Controller.pivot_turn_flag = 1;
