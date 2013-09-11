@@ -377,8 +377,8 @@ TASK(TaskMain)
 			if(g_CalibCnt >= 100)
 			{
 				g_Actuator.mouse = (U16)(g_CalibLightSum / g_CalibCnt);
-				//g_Actuator.mouse_white = g_Actuator.mouse * 2 / 5 + g_Actuator.white * 3 / 5;	//本番用
-				g_Actuator.mouse_white = g_Actuator.mouse * 3 / 5 + g_Actuator.white * 2 / 5;	//10F布用
+				g_Actuator.mouse_white = g_Actuator.mouse * 2 / 5 + g_Actuator.white * 3 / 5;	//本番用
+				//g_Actuator.mouse_white = g_Actuator.mouse * 3 / 5 + g_Actuator.white * 2 / 5;	//10F布用
 				//g_Actuator.mouse_white = (g_Actuator.mouse + g_Actuator.white) / 2;	//紙用
 				g_CalibFlag = 0;
 				g_CalibLightSum = 0;
@@ -394,9 +394,9 @@ TASK(TaskMain)
 		        display_goto_xy(1, 3);
 		        display_string("CLBBlack:TRUE");
 		        display_goto_xy(1, 4);
-		        display_string("CLBMouse:TRUE");
-		        display_goto_xy(1, 5);
-		        display_string("CLBGyro:FALSE");
+		        display_string("CLBTWHITE:FALSE");
+		        //display_goto_xy(1, 5);
+		        //display_string("CLBGyro:FALSE");
 		        display_update();
 		        ecrobot_sound_tone(880, 50, 30);
 
@@ -440,9 +440,9 @@ TASK(TaskMain)
 		        display_goto_xy(1, 3);
 		        display_string("CLBBlack:TRUE");
 		        display_goto_xy(1, 4);
-		        display_string("CLBMouse:TRUE");
-		        display_goto_xy(1, 5);
-		        display_string("CLBGyro:FALSE");
+		        display_string("CLBTBLACK:FALSE");
+		        //display_goto_xy(1, 5);
+		        //display_string("CLBGyro:FALSE");
 		        display_update();
 		        ecrobot_sound_tone(880, 50, 30);
 				g_MTState = TAILBLACKCALIB;
@@ -483,7 +483,7 @@ TASK(TaskMain)
 		        display_goto_xy(1, 3);
 		        display_string("CLBBlack:TRUE");
 		        display_goto_xy(1, 4);
-		        display_string("CLBMouse:TRUE");
+		        display_string("CLBM_TBW:TRUE");
 		        display_goto_xy(1, 5);
 		        display_string("CLBGyro:FALSE");
 		        display_update();
@@ -631,7 +631,7 @@ TASK(TaskSensor)
 	if(g_Controller.start_flag == 1){
 		g_Actuator.target_gray = (g_Actuator.black * 2 / 5 + g_Actuator.white * 3 /5);
 	}
-	g_Controller.dif_Light = max_Light - min_Light;
+	g_Controller.dif_Light = g_Actuator.target_gray - min_Light;
 	//--------------------------------
 	//	Gyro Data
 	//--------------------------------
@@ -1228,7 +1228,7 @@ void EventSensor(){
 	//==========================================
 	//	black & white
 	//==========================================
-	if(g_Sensor.light > (g_Actuator.black - 50) && g_Controller.light_status != 2)
+	if(g_Sensor.light > (g_Actuator.black - 80) && g_Controller.light_status != 2)
 	{
 		//--------------------------------
 		//	Event:black
@@ -1392,7 +1392,7 @@ void EventSensor(){
 	if(g_Controller.gray_flag == 0){
 		if(g_Controller.dif_Light > g_Actuator.target_gray - g_Actuator.mouse_white){
 			if(g_Actuator.forward >= 110){
-				if( g_Sensor.light < g_Actuator.mouse_white - 10 && g_Sensor.light > g_Actuator.mouse_white - 20 )
+				if( g_Sensor.light < g_Actuator.mouse_white - 10 && g_Sensor.light > g_Actuator.mouse_white - 30 )
 				{
 					setEvent(H_MOUSE_CHANGE);
 				}
@@ -1404,18 +1404,17 @@ void EventSensor(){
 				}
 			}
 			else if(g_Actuator.forward >= 50){
-				if( g_Sensor.light < g_Actuator.mouse_white + 0 && g_Sensor.light > g_Actuator.mouse_white - 20 )
+				if( g_Sensor.light < g_Actuator.mouse_white && g_Sensor.light > g_Actuator.mouse_white - 20 )
 				{
 					setEvent(H_MOUSE_CHANGE);
 				}
 			}
 			else if(g_Actuator.forward >= 30){
-				if( g_Sensor.light < g_Actuator.mouse_white + 5 && g_Sensor.light > g_Actuator.mouse_white - 20 )
+				if( g_Sensor.light < g_Actuator.mouse_white && g_Sensor.light > g_Actuator.mouse_white - 20 )
 				{
 					setEvent(H_MOUSE_CHANGE);
 				}
 			}
-			setEvent(H_MOUSE_CHANGE);
 		}
 	}
 
